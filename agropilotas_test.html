@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="lt">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport"/>
+  <title>
+   AgroPilotas – Vairavimo simuliatorius (klaviatūra) v22 – A/B single button &amp; collapse fix
+  </title>
+  <style>
+   html, body {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+            background: #071309;
+            color: #e9f5ea;
+            font-family: Segoe UI,Roboto,Arial,sans-serif
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: #0e3a14;
+            touch-action: none
+        }
+
+        /* HUD */
+        .hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 12px 12px 18px;
+            background: rgba(0,0,0,.32);
+            backdrop-filter: blur(8px) saturate(1.05);
+            -webkit-backdrop-filter: blur(8px) saturate(1.05);
+            border-bottom: 1px solid rgba(255,255,255,.14);
+            box-shadow: 0 8px 24px rgba(0,0,0,.25);
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow: visible
+        }
+
+        .hud-row {
+            display: none
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 4px;
+            position: relative;
+            z-index: 2
+        }
+
+        
+
+        .ledbar-wrap {
+            display: flex;
+            justify-content: center;
+            margin-top: 6px
+        }
+
+        .ledbar {
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        /* LED lightbar */
+        .ledstrip {
+            display: flex;
+            gap: 2px;
+            align-items: center
+        }
+
+            .ledstrip.left {
+                flex-direction: row-reverse;
+                justify-content: flex-start
+            }
+
+            .ledstrip.right {
+                justify-content: flex-start
+            }
+
+        .led {
+            width: 16px;
+            height: 24px;
+            border-radius: 6px;
+            opacity: .28;
+            background: #3c3c3c;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,.6)
+        }
+
+            .led.on {
+                opacity: 1
+            }
+
+            .led.g {
+                background: #38d06c;
+                box-shadow: 0 0 8px rgba(56,208,108,.8)
+            }
+
+            .led.y {
+                background: #ffd54f;
+                box-shadow: 0 0 8px rgba(255,213,79,.8)
+            }
+
+            .led.r {
+                background: #ff5d73;
+                box-shadow: 0 0 8px rgba(255,93,115,.8)
+            }
+
+
+
+        .stat {
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.15);
+            padding: 6px 10px;
+            border-radius: 10px;
+            font-size: 13px
+        }
+
+        .label {
+            opacity: .9
+        }
+
+        .val {
+            font-weight: 700;
+            margin-left: 6px
+        }
+
+        /* Controls row */
+        .controls {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            gap: 8px;
+            align-items: center;
+            justify-content: flex-start;
+            margin-top: 6px;
+            display: flex;
+            position: relative;
+            z-index: 3
+        }
+
+            .controls::-webkit-scrollbar {
+                display: none
+            }
+
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            background: #2b5cff;
+            color: #fff;
+            font-weight: 700;
+            box-shadow: 0 8px 18px rgba(43,92,255,.35)
+        }
+
+            .btn.ghost {
+                background: transparent;
+                border: 1px solid rgba(255,255,255,.3);
+                color: #d9e5ff;
+                box-shadow: none
+            }
+
+            .btn.on {
+                background: #00c853;
+                box-shadow: 0 8px 18px rgba(0,200,83,.45)
+            }
+
+        input[type="number"] {
+            width: 100px;
+            padding: 8px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,.3);
+            background: rgba(0,0,0,.2);
+            color: #e9f5ea
+        }
+
+        /* Collapsible groups */
+        .group {
+            display: flex;
+            flex-direction: column;
+            min-width: max-content
+        }
+
+        .group-body {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.18);
+            border-radius: 12px;
+            margin-top: 6px
+        }
+            /* ensure [hidden] actually hides despite .group-body display:flex */
+            .group-body[hidden] {
+                display: none !important;
+            }
+
+        .group .stat {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,.25)
+        }
+
+        .zoom-row {
+            display: flex;
+            gap: 8px
+        }
+
+        /* Number input spin controls */
+        .num-spin {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn.spin {
+            padding: 4px 10px;
+            line-height: 1;
+            font-weight: 800;
+        }
+        .group-body input[type="number"] {
+            width: 90px;
+        }
+
+        /* Hint */
+        .hint {
+            position: absolute;
+            left: 12px;
+            bottom: calc(12px + env(safe-area-inset-bottom,0px));
+            background: rgba(0,0,0,.35);
+            border: 1px solid rgba(255,255,255,.18);
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            line-height: 1.45;
+            z-index: 8
+        }
+
+        /* On-screen driving controls */
+        :root {
+            --btn-size: clamp(44px, 9vh, 68px);
+            --controls-bottom: max(18px, env(safe-area-inset-bottom,0px));
+            --controls-raise: 56px
+        }
+
+        .steer-controls {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: calc(var(--controls-bottom) + var(--controls-raise));
+            display: grid;
+            grid-template-columns: repeat(3,var(--btn-size));
+            grid-auto-rows: var(--btn-size);
+            gap: 6px;
+            justify-content: center;
+            align-items: center;
+            z-index: 6
+        }
+
+        .steer-btn {
+            width: var(--btn-size);
+            height: var(--btn-size);
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,.25);
+            background: rgba(255,255,255,.12);
+            color: #e9f5ea;
+            font-weight: 900;
+            font-size: calc(var(--btn-size)*0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 22px rgba(0,0,0,.35);
+            backdrop-filter: blur(4px);
+            cursor: pointer;
+            user-select: none;
+            touch-action: none
+        }
+
+            .steer-btn.on {
+                background: #00c853;
+                box-shadow: 0 8px 22px rgba(0,200,83,.45)
+            }
+
+            .steer-btn:active {
+                transform: scale(.98)
+            }
+        /* Classic keyboard inverted-T (no hole in the middle) */
+        #btnFwd {
+            grid-column: 2;
+            grid-row: 1
+        }
+
+        #btnSteerLeft {
+            grid-column: 1;
+            grid-row: 2
+        }
+
+        #btnSteerRight {
+            grid-column: 3;
+            grid-row: 2
+        }
+
+        #btnBack {
+            grid-column: 2;
+            grid-row: 3
+        }
+        /* Responsive downsizing for small screens */
+        @media (max-height: 620px) {
+            :root {
+                --btn-size: 60px
+            }
+        }
+
+        @media (max-height: 520px) {
+            :root {
+                --btn-size: 52px
+            }
+        }
+
+        @media (max-height: 460px) {
+            :root {
+                --btn-size: 44px
+            }
+        }
+
+        @media (max-width: 360px) {
+            :root {
+                --btn-size: 48px
+            }
+        }
+
+        /* Floating round action button (A/B marks) */
+        .fab {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 7;
+            background: #1e88e5;
+            color: #fff;
+            border: none;
+            border-radius: 9999px;
+            box-shadow: 0 10px 24px rgba(0,0,0,.35);
+            padding: 10px 14px;
+            font-weight: 800;
+            cursor: pointer
+        }
+
+            .fab.left {
+                left: 12px
+            }
+
+            .fab.right {
+                right: 12px
+            }
+
+            .fab.small {
+                font-size: 13px;
+                padding: 8px 12px
+            }
+
+            /* FAB color states for A/B flow */
+            .fab.fab-b { /* Pažymėti B? */
+                background: #00c853;
+                box-shadow: 0 10px 24px rgba(0,200,83,.45), 0 0 0 4px rgba(0,200,83,.18);
+            }
+
+            .fab.fab-a-attn { /* Pažymėti A after saving B -> attention */
+                background: #ff5252;
+                box-shadow: 0 10px 24px rgba(255,82,82,.45), 0 0 0 4px rgba(255,82,82,.22);
+            }
+
+        @media (max-width: 900px) {
+            .fab {
+                padding: 8px 12px;
+                font-size: 13px
+            }
+        }
+
+        @media (max-width: 600px) {
+            .fab {
+                padding: 6px 10px;
+                font-size: 12px
+            }
+        }
+
+        /* High-visibility overrides (v22.1) */
+        .hud {
+            background: linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.12))
+        }
+
+        .stat {
+            background: rgba(255,255,255,.18);
+            border-color: rgba(255,255,255,.45);
+            color: #fff
+        }
+
+        .btn {
+            background: #5a7dff;
+            box-shadow: 0 12px 24px rgba(90,125,255,.45);
+            font-weight: 800
+        }
+
+            .btn.ghost {
+                background: rgba(255,255,255,.12);
+                color: #fff;
+                border-color: rgba(255,255,255,.5)
+            }
+
+        canvas {
+            background: #1b7a33
+        }
+
+        /* Hide the old toolbar implement button */
+        .controls #btnImpl {
+            display: none !important;
+        }
+
+        /* Floating Implement toggle (right side, big, with icon) */
+        .apply-toggle {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 82px;
+            height: 82px;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,.12);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,.35);
+            box-shadow: 0 14px 26px rgba(0,0,0,.35);
+            cursor: pointer;
+            user-select: none;
+            z-index: 8;
+            touch-action: manipulation;
+        }
+
+            .apply-toggle .icon {
+                width: 36px;
+                height: 36px;
+                opacity: .95
+            }
+
+            /* ON/OFF visuals */
+            .apply-toggle.on {
+                background: #00c853;
+                border-color: rgba(0,0,0,.15);
+                box-shadow: 0 0 0 5px rgba(0,200,83,.2), 0 18px 30px rgba(0,0,0,.4);
+            }
+
+            .apply-toggle.off {
+                background: rgba(255,255,255,.12);
+            }
+
+        /* Smaller on phones */
+        @media (max-width: 700px) {
+            .apply-toggle {
+                width: 68px;
+                height: 68px;
+                right: 10px
+            }
+
+                .apply-toggle .icon {
+                    width: 30px;
+                    height: 30px
+                }
+        }
+        /* Bigger LED bar + CTE readout */
+        .ledbar {
+            gap: 12px;
+            transform: scale(1.35);
+            transform-origin: center top
+        }
+
+        .cte-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px
+        }
+
+        .cte-readout {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 900;
+            font-size: 30px;
+            line-height: 1;
+            letter-spacing: .4px
+        }
+
+            .cte-readout .num {
+                min-width: 90px;
+                text-align: center
+            }
+
+            .cte-readout .arrow {
+                font-size: 30px;
+                opacity: .35;
+                user-select: none;
+                transition: transform .1s ease, opacity .1s ease, color .1s ease;
+                color: #ffffff
+            }
+
+                .cte-readout .arrow.active {
+                    opacity: 1;
+                    transform: scale(1.15)
+                }
+
+        @media (max-width:900px) {
+
+            .cte-readout {
+                font-size: 24px
+            }
+
+                .cte-readout .num {
+                    min-width: 70px
+                }
+
+                .cte-readout .arrow {
+                    font-size: 24px
+                }
+
+            .led {
+                width: 12px;
+                height: 18px;
+                border-radius: 5px
+            }
+        }
+
+        .cte-readout .arrow.g {
+            color: #38d06c;
+            text-shadow: 0 0 10px rgba(56,208,108,.5)
+        }
+
+        .cte-readout .arrow.y {
+            color: #ffd54f;
+            text-shadow: 0 0 10px rgba(255,213,79,.5)
+        }
+
+        .cte-readout .arrow.r {
+            color: #ff5d73;
+            text-shadow: 0 0 12px rgba(255,93,115,.7)
+        }
+
+        .spd-readout {
+            margin-left: 12px
+        }
+
+        /* Modern chips for top info */
+        .chips {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap
+        }
+
+        .chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 12px;
+            background: rgba(255,255,255,.10);
+            border: 1px solid rgba(255,255,255,.25);
+            box-shadow: 0 8px 18px rgba(0,0,0,.25)
+        }
+
+            .chip .ico {
+                width: 18px;
+                height: 18px;
+                opacity: .95
+            }
+
+            .chip .label {
+                opacity: .9;
+                font-weight: 700
+            }
+
+            .chip .val {
+                font-weight: 800;
+                margin-left: 4px
+            }
+
+        /* Big speed card */
+        .speed-card {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            padding: 6px 10px;
+            border-radius: 12px;
+            background: rgba(0,0,0,.28);
+            border: 1px solid rgba(255,255,255,.25);
+            box-shadow: 0 10px 20px rgba(0,0,0,.35)
+        }
+
+        @media (max-width:900px) {
+            .speed-card .num {
+                font-size: 24px
+            }
+        }
+        /* === Floating main menu toggle (hamburger) === */
+        .menu-toggle {
+            position: absolute;
+            left: 14px;
+            top: 12px;
+            width: 58px;
+            height: 58px;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,.12);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,.35);
+            box-shadow: 0 12px 24px rgba(0,0,0,.35);
+            cursor: pointer;
+            user-select: none;
+            z-index: 9;
+            touch-action: manipulation
+        }
+
+            .menu-toggle .icon {
+                width: 26px;
+                height: 26px;
+                opacity: .95
+            }
+
+            .menu-toggle.on {
+                background: #4f7cff;
+                box-shadow: 0 0 0 4px rgba(79,124,255,.22), 0 16px 28px rgba(0,0,0,.45)
+            }
+
+        @media (max-width:700px) {
+            .menu-toggle {
+                width: 52px;
+                height: 52px;
+                left: 10px;
+                top: 10px
+            }
+
+                .menu-toggle .icon {
+                    width: 22px;
+                    height: 22px
+                }
+        }
+        /* Show/hide the two settings groups via the hamburger button */
+        .controls .group {
+            display: none
+        }
+
+        body.menus-open .controls .group {
+            display: flex
+        }
+        /* Simulator UI toggle */
+        body.sim-off .steer-controls {
+            display: none !important
+        }
+
+        body.sim-off .hint {
+            display: none !important
+        }
+        /* ---- Controls layout fix: keep arrows above taskbar & perfectly centered ---- */
+        :root {
+            --steer-bottom: 96px
+        }
+
+        .steer-controls {
+            bottom: var(--steer-bottom);
+            gap: 12px;
+            justify-items: center;
+            z-index: 8
+        }
+
+        @media (max-height:620px) {
+            :root {
+                --steer-bottom: 100px
+            }
+        }
+
+        @media (max-height:520px) {
+            :root {
+                --steer-bottom: 112px
+            }
+        }
+
+        @media (max-height:460px) {
+            :root {
+                --steer-bottom: 120px
+            }
+        }
+  </style>
+ </head>
+ <body>
+  <!-- Floating hamburger menu (reveals settings groups) -->
+  <button aria-label="Meniu" class="menu-toggle" id="menuToggle">
+   <svg class="icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="3" viewbox="0 0 24 24">
+    <line x1="4" x2="20" y1="7" y2="7">
+    </line>
+    <line x1="4" x2="16" y1="12" y2="12">
+    </line>
+    <line x1="4" x2="12" y1="17" y2="17">
+    </line>
+   </svg>
+  </button>
+  <div class="hud">
+   <div class="stats-row">
+    <div class="chips">
+     <div class="chip">
+      <svg class="ico" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24">
+       <circle cx="12" cy="12" r="9">
+       </circle>
+       <path d="M14.5 9.5L10 14l4.5-4.5Z">
+       </path>
+      </svg>
+      <span class="label">
+       Kryptis
+      </span>
+      <span class="val" id="hdgTxt">
+       0°
+      </span>
+     </div>
+     <div class="chip">
+      <svg class="ico" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" viewbox="0 0 24 24">
+       <line x1="4" x2="12" y1="18" y2="10">
+       </line>
+       <line x1="8" x2="16" y1="18" y2="10">
+       </line>
+       <line x1="12" x2="20" y1="18" y2="10">
+       </line>
+      </svg>
+      <span class="label">
+       Pravažiavimas
+      </span>
+      <span class="val" id="passTxt">
+       0
+      </span>
+     </div>
+     <div class="chip">
+      <svg class="ico" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24">
+       <circle cx="7" cy="12" r="2">
+       </circle>
+       <circle cx="17" cy="12" r="2">
+       </circle>
+       <line x1="9" x2="15" y1="12" y2="12">
+       </line>
+       <polyline points="14,10 15,12 14,14">
+       </polyline>
+       <polyline points="10,10 9,12 10,14">
+       </polyline>
+      </svg>
+      <span class="label">
+       AB
+      </span>
+      <span class="val" id="abTxt">
+       —
+      </span>
+     </div>
+    </div>
+   </div>
+   <!-- LED BAR (moved inside HUD, below chips) -->
+   <div class="ledbar-wrap">
+    <div class="ledbar" id="ledbar">
+     <div class="ledstrip left" id="ledLeft">
+     </div>
+      <div class="cte-block">
+       <div class="cte-readout">
+        <span class="num" id="spdTxt">0.0 km/h</span>
+       </div>
+      <div class="cte-readout">
+       <span class="arrow" id="cteLeftArrow">
+        ◄
+       </span>
+       <span class="num" id="cteNum">
+        0 cm
+       </span>
+       <span class="arrow" id="cteRightArrow">
+        ►
+       </span>
+      </div>
+     </div>
+     <div class="ledstrip right" id="ledRight">
+     </div>
+    </div>
+   </div>
+   <div class="controls">
+    <button class="btn" id="btnImpl">
+     Padargas: IŠJUNGTA (Tarpas)
+    </button>
+    <!-- Gairės (collapsible) -->
+    <div class="group">
+     <button class="btn ghost group-toggle" id="btnGuideSettings">
+      Gairės ▾
+     </button>
+     <div class="group-body" hidden="" id="panelGuide">
+      <button class="btn ghost" id="btnSetAB">
+       Nustatyti AB (čia + kryptis)
+      </button>
+     </div>
+    </div>
+    <!-- Padargo nustatymai (collapsible) -->
+    <div class="group">
+     <button class="btn ghost group-toggle" id="btnImplSettings">
+      Padargo nustatymai ▾
+     </button>
+     <div class="group-body" hidden="" id="panelImpl">
+      <label class="stat">
+       Darbinis plotis
+       <div class="num-spin">
+        <button type="button" class="btn ghost spin" id="btnPassWidthMinus">−</button>
+        <input id="passWidth" step="0.1" type="number" value="24"/>
+        <button type="button" class="btn ghost spin" id="btnPassWidthPlus">+</button>
+        <span>m</span>
+       </div>
+      </label>
+      <label class="stat">
+       Sukabos atstumas
+       <div class="num-spin">
+        <button type="button" class="btn ghost spin" id="btnHitchMinus">−</button>
+        <input id="hitchOffset" step="0.1" type="number" value="4"/>
+        <button type="button" class="btn ghost spin" id="btnHitchPlus">+</button>
+        <span>m</span>
+       </div>
+      </label>
+     </div>
+    </div>
+    <!-- Žemėlapio meniu (collapsible) -->
+    <div class="group">
+     <button class="btn ghost group-toggle" id="btnMapSettings">
+      Žemėlapio meniu ▾
+     </button>
+     <div class="group-body" hidden="" id="panelMap">
+      <button class="btn" id="btnFollow">
+       Sekimas: ĮJUNGTA (F / dvigubas spust.)
+      </button>
+      <button class="btn" id="btnRotate">
+       Sukimas: ĮJUNGTA (R)
+      </button>
+      <div class="zoom-row">
+       <button class="btn" id="btnZoomIn">
+        Priartinti +
+       </button>
+       <button class="btn" id="btnZoomOut">
+        Atitolinti −
+       </button>
+      </div>
+      <button class="btn ghost" id="btnClearTrail">
+       Išvalyti padengimą
+      </button>
+      <button class="btn ghost" id="btnReset">
+       Atstatyti
+      </button>
+      <button class="btn ghost" id="btnLowPower">
+       RT režimas: IŠJUNGTA
+      </button>
+      <button class="btn ghost" id="btnSimToggle">
+       Simuliatorius: ĮJUNGTAS
+      </button>
+     </div>
+    </div>
+   </div>
+  </div>
+  <canvas id="map">
+   </canvas>
+   <div class="hint">
+    <b>
+     Valdymas
+    </b>
+    <br/>
+    ↑ pagreitinti, ↓ stabdyti/atgal, ←/→ sukti
+    <br/>
+    Tarpas = Padargas ON/OFF | + / − = Priartinti/Atitolinti | Pelės ratukas = mastelis | Gestas žnyplėmis (pinch) = mastelis
+    <br/>
+    F = Sekimas ON/OFF | R = Sukimas ON/OFF | Dvigubas spust. = centruoti ir įjungti sekimą
+    <br/>
+    S = Nustatyti AB (čia+kryptis), A/B = Pažymėti A/B, N = Sukurti AB iš A→B
+   </div>
+   <!-- On-screen driving controls -->
+   <div class="steer-controls">
+    <button aria-label="Važiuoti pirmyn" class="steer-btn" id="btnFwd">
+     ▲
+    </button>
+    <button aria-label="Sukti kairėn" class="steer-btn" id="btnSteerLeft">
+     ◀
+    </button>
+    <button aria-label="Sukti dešinėn" class="steer-btn" id="btnSteerRight">
+     ▶
+    </button>
+    <button aria-label="Važiuoti atgal" class="steer-btn" id="btnBack">
+     ▼
+    </button>
+   </div>
+   <!-- Floating A/B action button (single) -->
+   <button class="fab left" id="fabAB">
+    Pažymėti A
+   </button>
+   <script>
+    // === v22.3 — Stable core + big CTE readout + floating Implement toggle ===
+            (function () {
+                // ----- Canvas -----
+                var canvas = document.getElementById('map');
+                var ctx = canvas.getContext('2d');
+                var W, H; function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; } window.addEventListener('resize', resize); resize();
+
+                // IE detect for RT low-power
+                var isIE = !!window.MSInputMethodContext && !!document.documentMode;
+                var LOWPOWER = false;
+
+                // ----- Camera -----
+                var basePxPerM = 12, zoom = 1; function pxPerM() { return basePxPerM * zoom; }
+                var camX = 0, camY = 0, camRot = 0; var follow = true, rotateOn = true;
+                function updateFollowBtn() { var b = document.getElementById('btnFollow'); if (b) { b.textContent = 'Sekimas: ' + (follow ? 'ĮJUNGTA' : 'IŠJUNGTA') + ' (F / dvigubas spust.)'; b.classList.toggle('on', follow); } }
+                function updateRotateBtn() { var b = document.getElementById('btnRotate'); if (b) { b.textContent = 'Sukimas: ' + (rotateOn ? 'ĮJUNGTA' : 'IŠJUNGTA') + ' (R)'; b.classList.toggle('on', rotateOn); } }
+                function updateLowPowerBtn() { var b = document.getElementById('btnLowPower'); if (b) { b.textContent = 'RT režimas: ' + (LOWPOWER ? 'ĮJUNGTA' : 'IŠJUNGTA'); b.classList.toggle('on', LOWPOWER); } }
+
+                function worldToScreen(wx, wy) { var ppm = pxPerM(), c = Math.cos(camRot), s = Math.sin(camRot); var dx = wx - camX, dy = wy - camY; var rx = dx * c + dy * s, ry = -dx * s + dy * c; return { x: rx * ppm + W / 2, y: ry * ppm + H / 2 }; }
+                function screenToWorld(sx, sy) { var ppm = pxPerM(), c = Math.cos(camRot), s = Math.sin(camRot); var rx = (sx - W / 2) / ppm, ry = (sy - H / 2) / ppm; var dx = rx * c - ry * s, dy = rx * s + ry * c; return { x: dx + camX, y: dy + camY }; }
+                function zoomAtScreenPoint(scale, sx, sy) { var before = screenToWorld(sx, sy); zoom = Math.max(.25, Math.min(4, zoom * scale)); var after = screenToWorld(sx, sy); camX += before.x - after.x; camY += before.y - after.y; }
+
+                // Mouse/touch interaction
+                var dragging = false, lastSx = 0, lastSy = 0; canvas.addEventListener('mousedown', function (e) { dragging = true; lastSx = e.clientX; lastSy = e.clientY; if (follow) { follow = false; updateFollowBtn(); } });
+                window.addEventListener('mouseup', function () { dragging = false; });
+                window.addEventListener('mousemove', function (e) { if (!dragging) return; var dx = e.clientX - lastSx, dy = e.clientY - lastSy; lastSx = e.clientX; lastSy = e.clientY; var m = 1 / pxPerM(); var c = Math.cos(camRot), s = Math.sin(camRot); var wx = (dx * m) * c - (dy * m) * s; var wy = (dx * m) * s + (dy * m) * c; camX -= wx; camY -= wy; });
+                canvas.addEventListener('wheel', function (e) { e.preventDefault(); var r = canvas.getBoundingClientRect(); zoomAtScreenPoint(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+                canvas.addEventListener('dblclick', function () { camX = x; camY = y; follow = true; updateFollowBtn(); if (rotateOn) camRot = hdg; });
+                // Pinch zoom
+                var tState = null; function tdist(a, b) { var dx = a.clientX - b.clientX, dy = a.clientY - b.clientY; return Math.hypot(dx, dy); } function findTouch(list, id) { for (var i = 0; i < list.length; i++) if (list[i].identifier === id) return list[i]; }
+                canvas.addEventListener('touchstart', function (e) { if (e.touches.length === 2) { e.preventDefault(); var t1 = e.touches[0], t2 = e.touches[1]; tState = { id1: t1.identifier, id2: t2.identifier, d0: tdist(t1, t2) }; if (follow) { follow = false; updateFollowBtn(); } } }, { passive: false });
+                canvas.addEventListener('touchmove', function (e) { if (!tState) return; var t1 = findTouch(e.touches, tState.id1), t2 = findTouch(e.touches, tState.id2); if (!t1 || !t2) { tState = null; return; } e.preventDefault(); var d = tdist(t1, t2); var rect = canvas.getBoundingClientRect(); var midx = (t1.clientX + t2.clientX) / 2 - rect.left; var midy = (t1.clientY + t2.clientY) / 2 - rect.top; zoomAtScreenPoint(d / tState.d0, midx, midy); tState.d0 = d; }, { passive: false });
+                canvas.addEventListener('touchend', function () { tState = null; });
+
+                // ----- Simulation state -----
+                var x = 0, y = 0, hdg = 0; // 0 rad = up
+                var v = 0, steer = 0, maxYawRate = 1.3, accel = 2.2, drag = 0.6, reverseAccel = 3.0, dt = 0.016;
+                var cruiseOn = false, cruiseSet = 0, cruiseMax = 10;
+                function adjustCruise(delta) { cruiseSet = Math.max(0, Math.min(cruiseMax, cruiseSet + delta)); cruiseOn = cruiseSet > 0; }
+
+                // Implement & coverage (default ON)
+                var implement = true, hitchOffset = 4.0, passWidth = 24.0; var coverageQuads = [], lastBar = null, coverageCap = Infinity;
+                function updateImplementUI() { var b = document.getElementById('btnImpl'); if (b) { b.textContent = 'Padargas: ' + (implement ? 'ĮJUNGTA' : 'IŠJUNGTA') + ' (Tarpas)'; b.classList.toggle('on', implement); } var flo = document.getElementById('applyToggle'); if (flo) { flo.classList.toggle('on', implement); flo.classList.toggle('off', !implement); flo.setAttribute('aria-pressed', implement ? 'true' : 'false'); flo.title = 'Padargas ' + (implement ? 'įjungtas' : 'išjungtas') + ' (Tarpas)'; } }
+                function toggleImplement() { implement = !implement; updateImplementUI(); }
+
+                // Simulator UI toggle (show/hide on-screen arrows and hint)
+                var simulatorOn = true;
+                function updateSimBtn() { var b = document.getElementById('btnSimToggle'); if (b) { b.textContent = 'Simuliatorius: ' + (simulatorOn ? 'ĮJUNGTAS' : 'IŠJUNGTAS'); b.classList.toggle('on', simulatorOn); } }
+                function setSimulatorOn(v) { simulatorOn = !!v; document.body.classList.toggle('sim-off', !simulatorOn); updateSimBtn(); }
+
+                // A/B + single FAB flow
+                var AB = null, markA = null, markB = null;
+                var minDistForB = 15;              // minimum 15 m between A and B
+                var abStage = 'A', bEligible = false; // 'A' | 'A_wait' | 'B'
+                var nearestPass = 0, activePass = 0;
+                var abJustCreated = false;         // makes the FAB red right after saving B
+
+                function refreshABStatus() {
+                    var e = document.getElementById('abTxt'); if (!e) return;
+                    var t = '—'; if (AB) t = 'Nustatyta'; else if (markA) t = 'A';
+                    e.textContent = t;
+                }
+
+                function setABHere() {
+                    // One-tap AB from current pose & heading
+                    markA = null; markB = null; bEligible = false; abStage = 'A'; abJustCreated = false;
+                    updateABFab();
+                    AB = { x0: x, y0: y, hdg: hdg };
+                    activePass = Math.round(cteForPose(x, y) / passWidth);
+                    refreshABStatus();
+                }
+
+                function startMarkA() {
+                    // Start A->B capture
+                    AB = null; activePass = 0; nearestPass = 0;
+                    markB = null; markA = { x: x, y: y };
+                    bEligible = false; abStage = 'A_wait';
+                    abJustCreated = false; // back to normal blue while waiting for B
+                    refreshABStatus();
+                    updateABFab();
+                }
+
+                function tryMarkB() {
+                    if (!markA) return;
+                    var d = Math.hypot(x - markA.x, y - markA.y);
+                    if (d < minDistForB) return; // not far enough yet
+
+                    markB = { x: x, y: y };
+                    buildABFromAB();
+
+                    // reset markers & stage
+                    markA = null; markB = null; bEligible = false;
+                    abStage = 'A';
+                    abJustCreated = true; // next time show Pažymėti A in RED
+                    refreshABStatus();
+                    updateABFab();
+                }
+
+                function updateABFab() {
+                    var fab = document.getElementById('fabAB');
+                    if (!fab) return;
+                    if (abStage === 'B') {
+                        // Ready to mark B -> green
+                        fab.textContent = 'Pažymėti B?';
+                        fab.classList.add('fab-b');
+                        fab.classList.remove('fab-a-attn');
+                    } else {
+                        // A or A_wait -> always blue; after saving B, text becomes "Pažymėti naują A"
+                        fab.classList.remove('fab-b');
+                        fab.classList.remove('fab-a-attn');
+                        fab.textContent = abJustCreated ? 'Pažymėti naują A' : 'Pažymėti A';
+                    }
+                }
+
+                function buildABFromAB() {
+                    if (!markA || !markB) return;
+                    var dx = markB.x - markA.x, dy = markB.y - markA.y;
+                    var h = Math.atan2(dx, -dy); // heading along A->B
+                    AB = { x0: markA.x, y0: markA.y, hdg: h };
+                    activePass = Math.round(cteForPose(x, y) / passWidth);
+                    refreshABStatus();
+                }
+
+                function cteForPose(px, py) {
+                    if (!AB) return 0;
+                    var nx = Math.cos(AB.hdg), ny = Math.sin(AB.hdg);
+                    var ex = px - AB.x0, ey = py - AB.y0;
+                    return ex * nx + ey * ny;
+                }
+
+                function cteRelativeToActivePass(px, py) {
+                    if (!AB) return 0;
+                    var raw = cteForPose(px, py);
+                    nearestPass = Math.round(raw / passWidth);
+                    if (Math.abs(raw - activePass * passWidth) > passWidth / 2) activePass = nearestPass;
+                    return raw - activePass * passWidth;
+                }
+
+                // LED bar
+                var ledsLeft = document.getElementById('ledLeft'), ledsRight = document.getElementById('ledRight'); var LED_COUNT = 16;
+                function buildLeds() { if (!ledsLeft || !ledsRight) return; ledsLeft.innerHTML = ''; ledsRight.innerHTML = ''; LED_COUNT = LOWPOWER ? 10 : 16; for (var i = 0; i < LED_COUNT; i++) { var a = document.createElement('div'); a.className = 'led'; ledsLeft.appendChild(a); var b = document.createElement('div'); b.className = 'led'; ledsRight.appendChild(b); } }
+                function updateLedBar(cte) {
+                    if (!ledsLeft || !ledsRight) return;
+
+                    // Determine heading-relative guidance sign.
+                    // When driving opposite the AB heading (>90°), invert the steer indication.
+                    var headingSign = 1;
+                    if (AB) {
+                        var d = hdg - AB.hdg;               // angle difference
+                        d = (d + Math.PI) % (2 * Math.PI) - Math.PI; // normalize to (-π, π]
+                        headingSign = (Math.abs(d) <= Math.PI / 2) ? 1 : -1;
+                    }
+                    var guide = cte * headingSign; // use this for which-way-to-steer logic
+
+                    // --- side LEDs --- (intensity based on absolute error)
+                    var m = Math.abs(cte);
+                    var perLed = 0.15; // 15 cm per LED
+                    var lit = Math.min(LED_COUNT, Math.floor(m / perLed));
+
+                    for (var k = 0; k < LED_COUNT; k++) {
+                        if (ledsLeft.children[k]) ledsLeft.children[k].className = 'led';
+                        if (ledsRight.children[k]) ledsRight.children[k].className = 'led';
+                    }
+
+                    if (lit > 0) {
+                        // Light the side you should steer TOWARD (opposite of error, heading-aware)
+                        var side = (guide >= 0) ? ledsLeft.children : ledsRight.children;
+                        for (var n = 0; n < lit; n++) {
+                            var el = side[n]; if (!el) break;
+                            var frac = (n + 1) / LED_COUNT;
+                            var cls = (frac < .33) ? 'g' : (frac < .66 ? 'y' : 'r');
+                            el.className = 'led on ' + cls;
+                        }
+                    }
+
+                    // --- center readout + colored arrows ---
+                    var num = document.getElementById('cteNum');
+                    if (num) num.textContent = Math.round(m * 100) + ' cm';
+
+                    var la = document.getElementById('cteLeftArrow');
+                    var ra = document.getElementById('cteRightArrow');
+                    var thr = 0.02; // 2 cm = centered
+                    if (la && ra) {
+                        // reset base classes
+                        la.className = 'arrow';
+                        ra.className = 'arrow';
+                        if (m > thr) {
+                            var sev = (m >= 0.25) ? 'r' : (m >= 0.10 ? 'y' : 'g');
+                            // Opposite-of-error + heading-aware: if guide < 0 -> steer right; else steer left
+                            if (guide < 0) ra.className = 'arrow active ' + sev; else la.className = 'arrow active ' + sev;
+                        }
+                    }
+                }
+
+                // Keyboard
+                var keys = {};
+                window.addEventListener('keydown', function (e) { keys[e.key] = true; if (e.key === ' ') { e.preventDefault(); toggleImplement(); } if (e.key === 'f' || e.key === 'F') { follow = !follow; updateFollowBtn(); } if (e.key === 'r' || e.key === 'R') { rotateOn = !rotateOn; updateRotateBtn(); } if (e.key === 's' || e.key === 'S') { setABHere(); } if (e.key === 'n' || e.key === 'N') { buildABFromAB(); } if (e.key === '+' || e.key === '=') zoomAtScreenPoint(1.15, W / 2, H / 2); if (e.key === '-' || e.key === '_') zoomAtScreenPoint(1 / 1.15, W / 2, H / 2); });
+                window.addEventListener('keyup', function (e) { keys[e.key] = false; });
+
+                // Buttons
+                var $ = function (id) { return document.getElementById(id) };
+                if ($('btnImpl')) $('btnImpl').onclick = toggleImplement;
+                if ($('btnSetAB')) $('btnSetAB').onclick = setABHere;
+                if ($('btnClearTrail')) $('btnClearTrail').onclick = function () { coverageQuads.length = 0; lastBar = null; };
+                if ($('btnReset')) $('btnReset').onclick = function () { x = 0; y = 0; hdg = 0; v = 0; steer = 0; coverageQuads.length = 0; lastBar = null; camX = x; camY = y; camRot = rotateOn ? hdg : 0; activePass = 0; nearestPass = 0; };
+                if ($('btnZoomIn')) $('btnZoomIn').onclick = function () { zoomAtScreenPoint(1.15, W / 2, H / 2); };
+                if ($('btnZoomOut')) $('btnZoomOut').onclick = function () { zoomAtScreenPoint(1 / 1.15, W / 2, H / 2); };
+                if ($('btnFollow')) $('btnFollow').onclick = function () { follow = !follow; updateFollowBtn(); if (follow) { camX = x; camY = y; if (rotateOn) camRot = hdg; } };
+                if ($('btnRotate')) $('btnRotate').onclick = function () { rotateOn = !rotateOn; updateRotateBtn(); if (rotateOn && follow) camRot = hdg; };
+                if ($('btnLowPower')) $('btnLowPower').onclick = function () { setLowPower(!LOWPOWER); };
+                if ($('btnSimToggle')) $('btnSimToggle').onclick = function () { setSimulatorOn(!simulatorOn); };
+                if ($('passWidth')) $('passWidth').oninput = function () { passWidth = Math.max(.1, parseFloat(this.value) || 24); };
+                if ($('hitchOffset')) $('hitchOffset').oninput = function () { hitchOffset = Math.max(0, parseFloat(this.value) || 4); };
+
+                // Spin buttons (±0.5 m)
+                function adjustNumberInput(id, delta, min, max) {
+                    var inp = $(id); if (!inp) return;
+                    var raw = ('' + inp.value).replace(',', '.');
+                    var val = parseFloat(raw); if (isNaN(val)) val = 0;
+                    val = Math.max(min, Math.min(max, val + delta));
+                    // keep two decimals
+                    inp.value = val.toFixed(2).replace(/\.00$/, '');
+                    inp.dispatchEvent(new Event('input'));
+                }
+                var bwm = $('btnPassWidthMinus'); if (bwm) bwm.onclick = function(){ adjustNumberInput('passWidth', -0.5, 0.1, 100); };
+                var bwp = $('btnPassWidthPlus'); if (bwp) bwp.onclick = function(){ adjustNumberInput('passWidth', +0.5, 0.1, 100); };
+                var bhm = $('btnHitchMinus'); if (bhm) bhm.onclick = function(){ adjustNumberInput('hitchOffset', -0.5, 0.0, 50); };
+                var bhp = $('btnHitchPlus'); if (bhp) bhp.onclick = function(){ adjustNumberInput('hitchOffset', +0.5, 0.0, 50); };
+
+                // Collapsible panels
+                (function () {
+                    function togglePanel(btn, panel) { var open = !panel.hasAttribute('hidden'); if (open) { panel.setAttribute('hidden', ''); if (btn) btn.textContent = btn.textContent.replace('▴', '▾'); } else { panel.removeAttribute('hidden'); if (btn) btn.textContent = btn.textContent.replace('▾', '▴'); } }
+                    var b1 = $('btnImplSettings'), p1 = $('panelImpl'); var b2 = $('btnMapSettings'), p2 = $('panelMap'); if (p1) p1.hidden = true; if (p2) p2.hidden = true; if (b1 && p1) b1.addEventListener('click', function () { togglePanel(b1, p1); }); if (b2 && p2) b2.addEventListener('click', function () { togglePanel(b2, p2); });
+                    var b3 = $('btnGuideSettings'), p3 = $('panelGuide'); if (p3) p3.hidden = true; if (b3 && p3) b3.addEventListener('click', function () { togglePanel(b3, p3); });
+                })();
+
+                // Floating Implement toggle: bind after DOM is fully parsed
+                document.addEventListener('DOMContentLoaded', function () {
+                    // Floating implement toggle
+                    var t = document.getElementById('applyToggle');
+                    if (t) {
+                        t.addEventListener('click', function (e) { e.preventDefault(); toggleImplement(); });
+                    }
+                    // Menu hamburger toggle
+                    var mbtn = document.getElementById('menuToggle');
+                    function setGroupsExpanded(open) {
+                        var pairs = [
+                            ['btnGuideSettings','panelGuide'],
+                            ['btnImplSettings','panelImpl'],
+                            ['btnMapSettings','panelMap']
+                        ];
+                        for (var i = 0; i < pairs.length; i++) {
+                            var b = document.getElementById(pairs[i][0]);
+                            var p = document.getElementById(pairs[i][1]);
+                            if (!p) continue;
+                            if (open) {
+                                p.removeAttribute('hidden');
+                                if (b) b.textContent = b.textContent.replace('▾', '▴');
+                            } else {
+                                p.setAttribute('hidden','');
+                                if (b) b.textContent = b.textContent.replace('▴', '▾');
+                            }
+                        }
+                    }
+                    if (mbtn) {
+                        mbtn.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            var nowOpen = !document.body.classList.contains('menus-open');
+                            document.body.classList.toggle('menus-open');
+                            mbtn.classList.toggle('on');
+                            setGroupsExpanded(nowOpen);
+                        });
+                    }
+
+                    // Single FAB for A/B marking
+                    var fab = document.getElementById('fabAB');
+                    if (fab) {
+                        fab.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            if (abStage === 'B') { tryMarkB(); }
+                            else { startMarkA(); }
+                        });
+                    }
+                    // sync UI
+                    updateImplementUI();
+                    updateABFab();
+                    refreshABStatus();
+                    // ensure correct visibility state (show hint/controls when sim is ON)
+                    setSimulatorOn(simulatorOn);
+                });
+
+                // On‑screen driving controls (pointer)
+                function bindHold(btnId, key) { var btn = $(btnId); if (!btn) return; var active = false, pid = null; function up() { if (!active) return; keys[key] = false; btn.classList.remove('on'); active = false; if (pid != null && btn.releasePointerCapture) { try { btn.releasePointerCapture(pid); } catch (_) { } } pid = null; } btn.addEventListener('pointerdown', function (e) { e.preventDefault(); keys[key] = true; btn.classList.add('on'); active = true; if (btn.setPointerCapture && e.pointerId != null) { pid = e.pointerId; btn.setPointerCapture(pid); } }); btn.addEventListener('pointerup', up); btn.addEventListener('pointercancel', up); btn.addEventListener('pointerleave', up); window.addEventListener('pointerup', up); }
+                function bindCruiseStep(btnId, delta) { var btn = $(btnId); if (!btn) return; var timer = null; function step() { adjustCruise(delta); btn.classList.add('on'); } btn.addEventListener('pointerdown', function (e) { e.preventDefault(); step(); if (btn.setPointerCapture && e.pointerId != null) btn.setPointerCapture(e.pointerId); timer = setInterval(step, 140); }); function stop() { if (timer) { clearInterval(timer); timer = null; } btn.classList.remove('on'); } btn.addEventListener('pointerup', stop); btn.addEventListener('pointercancel', stop); btn.addEventListener('pointerleave', stop); window.addEventListener('pointerup', stop); }
+                bindCruiseStep('btnFwd', +0.5); bindHold('btnSteerLeft', 'ArrowLeft'); bindHold('btnSteerRight', 'ArrowRight'); bindCruiseStep('btnBack', -0.5);
+
+                // --- Keep steer controls above OS taskbar / dock ---
+                function autoLiftControls() {
+                    var sc = document.querySelector('.steer-controls');
+                    if (!sc) return;
+                    // reset to base value from CSS var
+                    sc.style.bottom = getComputedStyle(document.documentElement).getPropertyValue('--steer-bottom').trim() || '96px';
+                    requestAnimationFrame(function () {
+                        var r = sc.getBoundingClientRect();
+                        var minGap = 16; // pixels from screen bottom
+                        var gap = window.innerHeight - r.bottom; // positive when fully visible
+                        if (gap < minGap) {
+                            var extra = Math.ceil(minGap - gap);
+                            sc.style.bottom = 'calc(var(--steer-bottom) + ' + extra + 'px)';
+                        }
+                    });
+                }
+                window.addEventListener('resize', autoLiftControls);
+                window.addEventListener('orientationchange', autoLiftControls);
+
+                // Low power
+                function setLowPower(v) { LOWPOWER = !!v; updateLowPowerBtn(); buildLeds(); coverageCap = LOWPOWER ? 300 : Infinity; }
+
+                // Helpers
+                function angleLerp(a, b, t) { var d = ((b - a + Math.PI) % (2 * Math.PI)) - Math.PI; return a + d * t; }
+                function currentImplementBar() { var half = passWidth / 2; var hx = Math.sin(hdg), hy = -Math.cos(hdg); var nx = Math.cos(hdg), ny = Math.sin(hdg); var hitchX = x - hx * hitchOffset, hitchY = y - hy * hitchOffset; return { L: { x: hitchX - nx * half, y: hitchY - ny * half }, R: { x: hitchX + nx * half, y: hitchY + ny * half } } }
+
+                // Update
+                var frameTick = 0;
+                function update() {
+                    // A→B stage
+                    if (markA && !AB) { var dNow = Math.hypot(x - markA.x, y - markA.y); var eligible = dNow >= minDistForB; if (eligible !== bEligible) { bEligible = eligible; } var newStage = bEligible ? 'B' : 'A_wait'; if (newStage !== abStage) { abStage = newStage; updateABFab(); } }
+                    // steering
+                    var si = 0; if (keys['ArrowLeft']) si -= 1; if (keys['ArrowRight']) si += 1; steer = si;
+                    // speed
+                    if (keys['ArrowUp']) { v += accel * dt; cruiseOn = false; }
+                    else if (keys['ArrowDown']) { v -= reverseAccel * dt; cruiseOn = false; }
+                    else if (cruiseOn) { if (v < cruiseSet - 0.02) v = Math.min(cruiseSet, v + accel * dt); else if (v > cruiseSet + 0.02) v = Math.max(cruiseSet, v - reverseAccel * dt); }
+                    else { if (v > 0) v = Math.max(0, v - drag * dt); else if (v < 0) v = Math.min(0, v + drag * dt); }
+                    v = Math.max(-5, Math.min(cruiseMax, v));
+                    // yaw + integrate
+                    var yaw = maxYawRate * steer * (0.6 + 0.4 * Math.min(1, Math.abs(v) / 10)); hdg += yaw * dt; var vx = Math.sin(hdg) * v, vy = -Math.cos(hdg) * v; x += vx * dt; y += vy * dt;
+                    // camera
+                    if (follow) { var lerp = .15; camX += (x - camX) * lerp; camY += (y - camY) * lerp; }
+                    var targetRot = (rotateOn && follow) ? hdg : 0; camRot = angleLerp(camRot, targetRot, 0.18);
+                    // coverage
+                    if (implement) { var bar = currentImplementBar(); if (lastBar) { if (!LOWPOWER || frameTick % 3 === 0) { coverageQuads.push({ l0: lastBar.L, r0: lastBar.R, l1: bar.L, r1: bar.R }); if (isFinite(coverageCap) && coverageQuads.length > coverageCap) coverageQuads.splice(0, coverageQuads.length - coverageCap); } } lastBar = bar; } else lastBar = null;
+                }
+        // Draw
+        function draw() {
+        ctx.clearRect(0, 0, W, H);
+        var ppm = pxPerM();
+
+        // world space
+        ctx.save();
+        ctx.translate(W / 2, H / 2);
+        ctx.rotate(-camRot);
+        ctx.translate(-camX * ppm, -camY * ppm);
+
+        // background
+        ctx.fillStyle = '#155f25';
+        ctx.fillRect((camX * ppm) - W * 2, (camY * ppm) - H * 2, W * 4, H * 4);
+
+        // grid
+        if (!LOWPOWER || (frameTick % 2 === 0)) {
+        var step = (LOWPOWER ? 20 : 10) * ppm;
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(255,255,255,.14)';
+        ctx.lineWidth = 1;
+        for (var gx = (Math.floor((camX * ppm - W) / step) * step); gx < (camX * ppm + W); gx += step) {
+        ctx.moveTo(gx, camY * ppm - H);
+        ctx.lineTo(gx, camY * ppm + H);
+        }
+        for (var gy = (Math.floor((camY * ppm - H) / step) * step); gy < (camY * ppm + H); gy += step) {
+        ctx.moveTo(camX * ppm - W, gy);
+        ctx.lineTo(camX * ppm + W, gy);
+        }
+        ctx.stroke();
+        }
+
+        // AB passes (infinite span)
+        if (AB) {
+        var nx = Math.cos(AB.hdg), ny = Math.sin(AB.hdg);
+        var ex = camX - AB.x0, ey = camY - AB.y0;
+        var e_cam = ex * nx + ey * ny;
+        var halfWm = (W / ppm) / 2, halfHm = (H / ppm) / 2;
+        var r = Math.hypot(halfWm, halfHm) + passWidth * 2;
+        var kMin = Math.floor((e_cam - r) / passWidth), kMax = Math.ceil((e_cam + r) / passWidth);
+        // make guidance lines effectively infinite across the field
+        var tx = Math.sin(AB.hdg), ty = -Math.cos(AB.hdg), span = 10000;
+        for (var k = kMin; k <= kMax; k++) {
+        var off = k * passWidth;
+        var ox = AB.x0 + nx * off - tx * span, oy = AB.y0 + ny * off - ty * span;
+        var ex2 = AB.x0 + nx * off + tx * span, ey2 = AB.y0 + ny * off + ty * span;
+        ctx.beginPath();
+        ctx.moveTo(ox * ppm, oy * ppm);
+        ctx.lineTo(ex2 * ppm, ey2 * ppm);
+        if (k === activePass) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(160,255,245,1)';
+        ctx.lineWidth = LOWPOWER ? 4 : 6;
+        if (!LOWPOWER) { ctx.shadowColor = 'rgba(140,240,218,0.85)'; ctx.shadowBlur = 16; }
+        ctx.stroke();
+        ctx.restore();
+        } else {
+        ctx.strokeStyle = 'rgba(160,255,245,.6)';
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
+        }
+        }
+        }
+
+        // coverage
+        if (coverageQuads.length) {
+        ctx.fillStyle = 'rgba(15,40,18,0.6)';
+        for (var i = 0; i < coverageQuads.length; i++) {
+        var q = coverageQuads[i];
+        ctx.beginPath();
+        ctx.moveTo(q.l0.x * ppm, q.l0.y * ppm);
+        ctx.lineTo(q.r0.x * ppm, q.r0.y * ppm);
+        ctx.lineTo(q.r1.x * ppm, q.r1.y * ppm);
+        ctx.lineTo(q.l1.x * ppm, q.l1.y * ppm);
+        ctx.closePath();
+        ctx.fill();
+        }
+        }
+
+        // implement link + bar
+        var bar = currentImplementBar();
+        var hx = Math.sin(hdg), hy = -Math.cos(hdg);
+        var hitchX = x - hx * hitchOffset, hitchY = y - hy * hitchOffset;
+        ctx.beginPath(); ctx.moveTo(x * ppm, y * ppm); ctx.lineTo(hitchX * ppm, hitchY * ppm);
+        ctx.strokeStyle = 'rgba(200,200,200,.7)'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(bar.L.x * ppm, bar.L.y * ppm); ctx.lineTo(bar.R.x * ppm, bar.R.y * ppm);
+        ctx.strokeStyle = '#ffd600'; ctx.lineWidth = 4; ctx.stroke();
+
+        // tractor
+        var triL = 12, triW = 6;
+        ctx.save(); ctx.translate(x * ppm, y * ppm); ctx.rotate(hdg);
+        ctx.beginPath();
+        ctx.moveTo(0, -triL * ppm * 0.6);
+        ctx.lineTo(triW * ppm * 0.5, triL * ppm * 0.4);
+        ctx.lineTo(-triW * ppm * 0.5, triL * ppm * 0.4);
+        ctx.closePath();
+        ctx.fillStyle = '#fff36b';
+        if (!LOWPOWER) { ctx.shadowColor = '#fffbb5'; ctx.shadowBlur = 18; }
+        ctx.fill();
+        ctx.beginPath(); ctx.moveTo(0, -triL * ppm * 0.75); ctx.lineTo(0, -triL * ppm * 0.55);
+        ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 3; ctx.stroke();
+        ctx.restore();
+
+        // A/B markers
+        if (markA) { drawMarkerWorld(markA.x, markA.y, 'A', ppm); }
+        if (markB) { drawMarkerWorld(markB.x, markB.y, 'B', ppm); }
+
+        ctx.restore();
+
+        // HUD text & LEDs
+        var cte = cteRelativeToActivePass(x, y);
+        var e;
+        if ((e = document.getElementById('spdTxt'))) e.textContent = (v * 3.6).toFixed(1) + ' km/h';
+        if ((e = document.getElementById('hdgTxt'))) e.textContent = (((hdg * 180 / Math.PI) % 360 + 360) % 360).toFixed(0) + '°';
+        if ((e = document.getElementById('passTxt'))) e.textContent = activePass;
+        updateLedBar(cte);
+        }
+
+        function drawMarkerWorld(wx, wy, label, ppm) {
+        ctx.save();
+        ctx.beginPath(); ctx.arc(wx * ppm, wy * ppm, 10, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,200,255,.9)';
+        if (!LOWPOWER) { ctx.shadowColor = 'rgba(0,200,255,.7)'; ctx.shadowBlur = 12; }
+        ctx.fill();
+        ctx.fillStyle = '#001018'; ctx.font = 'bold 12px Segoe UI,Arial';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(label, wx * ppm, wy * ppm);
+        ctx.restore();
+        }
+
+        // Main loop
+        var last = performance.now(), carry = 0;
+        var target60 = 1000 / 60, target30 = 1000 / 30;
+        if (isIE) LOWPOWER = true;
+        function frame(now) {
+        var elapsed = now - last; last = now;
+        var target = LOWPOWER ? target30 : target60;
+        carry += elapsed; if (carry < target) { requestAnimationFrame(frame); return; }
+        carry = 0; frameTick++;
+        var steps = Math.max(1, Math.min(5, Math.round((target / 1000) / dt)));
+        for (var i = 0; i < steps; i++) update();
+        draw();
+        requestAnimationFrame(frame);
+        }
+
+        // init
+        camX = x; camY = y; camRot = rotateOn ? hdg : 0;
+        updateFollowBtn(); updateRotateBtn(); updateLowPowerBtn();
+        buildLeds(); refreshABStatus(); updateABFab(); updateImplementUI(); updateSimBtn();
+        autoLiftControls();
+        requestAnimationFrame(frame);
+        })();
+   </script>
+ </body>
+</html>
