@@ -454,6 +454,7 @@
                 opacity: .95
             }
 
+
             /* ON/OFF visuals */
             .apply-toggle.on {
                 background: #00c853;
@@ -728,11 +729,40 @@
        </path>
       </svg>
       <span class="label">
-       Pizė
+       Kryptis
       </span>
       <span class="val" id="hdgTxt">
        0°
       </span>
+     </div>
+     <!-- Distance A→B -->
+     <div class="chip">
+      <svg class="ico" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+       <path d="M3 17h18"/>
+       <path d="M3 17l3-3M3 17l3 3"/>
+       <path d="M21 17l-3-3M21 17l-3 3"/>
+      </svg>
+      <span class="label">Atstumas AB</span>
+      <span class="val" id="distTxt">—</span>
+     </div>
+     <!-- Worked area -->
+     <div class="chip">
+      <svg class="ico" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+       <rect x="5" y="5" width="14" height="14" rx="2" ry="2"/>
+       <path d="M5 12h14M12 5v14"/>
+      </svg>
+      <span class="label">Išdirbtas plotas</span>
+      <span class="val" id="areaTxt">0.00 ha</span>
+     </div>
+     <!-- Productivity (area rate) -->
+     <div class="chip">
+      <svg class="ico" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+       <circle cx="12" cy="12" r="9"/>
+       <path d="M12 12l5-2"/>
+       <path d="M12 7v5"/>
+      </svg>
+      <span class="label">Našumas</span>
+      <span class="val" id="rateTxt">0.00 ha/h</span>
      </div>
      <div class="chip">
       <svg class="ico" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" viewbox="0 0 24 24">
@@ -815,7 +845,7 @@
     <!-- Padargo nustatymai (collapsible) -->
     <div class="group">
      <button class="btn ghost group-toggle" id="btnImplSettings">
-      Padargo nustatymai ▾
+      Padargas ▾
      </button>
      <div class="group-body" hidden="" id="panelImpl">
       <label class="stat">
@@ -827,28 +857,29 @@
         <span>m</span>
        </div>
       </label>
-      <label class="stat">
-       Sukabos atstumas
-       <div class="num-spin">
-        <button type="button" class="btn ghost spin" id="btnHitchMinus">−</button>
-        <input id="hitchOffset" step="0.1" type="number" value="4"/>
-        <button type="button" class="btn ghost spin" id="btnHitchPlus">+</button>
-        <span>m</span>
-       </div>
-      </label>
+     <label class="stat">
+      Sukabos atstumas
+      <div class="num-spin">
+       <button type="button" class="btn ghost spin" id="btnHitchMinus">-</button>
+       <input id="hitchOffset" step="0.1" type="number" value="4"/>
+       <button type="button" class="btn ghost spin" id="btnHitchPlus">+</button>
+       <span>m</span>
+      </div>
+     </label>
+      <button class="btn ghost" id="btnImplMode">Padargas: Standus</button>
      </div>
     </div>
     <!-- Žemėlapio meniu (collapsible) -->
     <div class="group">
      <button class="btn ghost group-toggle" id="btnMapSettings">
-      Žemėlapio meniu ▾
+      Žemėlapis ▾
      </button>
      <div class="group-body" hidden="" id="panelMap">
       <button class="btn" id="btnFollow">
-       Sekimas: ĮJUNGTA (F / dvigubas spust.)
+       Sekimas: ĮJUNGTA
       </button>
       <button class="btn" id="btnRotate">
-       Sukimas: ĮJUNGTA (R)
+       Sukimas: ĮJUNGTA
       </button>
       <div class="zoom-row">
        <button class="btn" id="btnZoomIn">
@@ -865,7 +896,7 @@
        Atstatyti
       </button>
       <button class="btn ghost" id="btnLowPower">
-       RT režimas: IŠJUNGTA
+       Paprastas rėžimas: IŠJUNGTA
       </button>
       <button class="btn ghost" id="btnSimToggle">
        Simuliatorius: ĮJUNGTAS
@@ -908,6 +939,20 @@
    <button class="fab left" id="fabAB">
     Pažymėti A
    </button>
+      <!-- Floating Implement ON/OFF toggle (right side) -->
+   <button id="applyToggle" class="apply-toggle on" aria-pressed="true" title="Padargas įjungtas (Tarpas)" aria-label="Padargas">
+    <!-- Implement coverage rows icon: bar + expanding rows -->
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <!-- Implement bar (thicker) -->
+      <path d="M4 7H20" stroke-width="2.5"/>
+      <!-- Tines under bar -->
+      <path d="M8 8.5v1.5M12 8.5v1.5M16 8.5v1.5"/>
+      <!-- Coverage rows (grow wider lower down for perspective) -->
+      <path d="M9 11H15"/>
+      <path d="M7 14H17"/>
+      <path d="M5 17H19"/>
+    </svg>
+   </button>
    <script>
     // === v22.3 — Stable core + big CTE readout + floating Implement toggle ===
             (function () {
@@ -923,7 +968,7 @@
                 // ----- Camera -----
                 var basePxPerM = 12, zoom = 1; function pxPerM() { return basePxPerM * zoom; }
                 var camX = 0, camY = 0, camRot = 0; var follow = true, rotateOn = true;
-                function updateFollowBtn() { var b = document.getElementById('btnFollow'); if (b) { b.textContent = 'Sekimas: ' + (follow ? 'ĮJUNGTA' : 'IŠJUNGTA') + ' (F / dvigubas spust.)'; b.classList.toggle('on', follow); } }
+                function updateFollowBtn() { var b = document.getElementById('btnFollow'); if (b) { b.textContent = 'Sekimas: ' + (follow ? 'ĮJUNGTA' : 'IŠJUNGTA') + ''; b.classList.toggle('on', follow); } }
                 function updateRotateBtn() { var b = document.getElementById('btnRotate'); if (b) { b.textContent = 'Sukimas: ' + (rotateOn ? 'ĮJUNGTA' : 'IŠJUNGTA') + ' (R)'; b.classList.toggle('on', rotateOn); } }
                 function updateLowPowerBtn() { var b = document.getElementById('btnLowPower'); if (b) { b.textContent = 'RT režimas: ' + (LOWPOWER ? 'ĮJUNGTA' : 'IŠJUNGTA'); b.classList.toggle('on', LOWPOWER); } }
 
@@ -950,7 +995,33 @@
                 function adjustCruise(delta) { cruiseSet = Math.max(0, Math.min(cruiseMax, cruiseSet + delta)); cruiseOn = cruiseSet > 0; }
 
                 // Implement & coverage (default ON)
-                var implement = true, hitchOffset = 4.0, passWidth = 24.0; var coverageQuads = [], lastBar = null, coverageCap = Infinity;
+                // Note: hitchOffset is measured from tractor tail (base of triangle), not center
+                var implement = true, hitchOffset = 4.0, passWidth = 24.0, tractorTailBack = 4.8; // meters from center to triangle tail
+                var implementMode = 'axle'; // default to 'Ant ašies' (trailer-like)
+                var implHdg = 0;             // implement heading (used in 'axle' mode)
+                // Trailer-like articulation tuning (axle mode)
+                var implMaxRate   = 1.4;     // max articulation rate (rad/s)
+                var coverageQuads = [], lastBar = null, coverageCap = Infinity;
+                var totalAreaM2 = 0; // accumulated worked area in m^2
+                // Preferences helpers
+                function savePrefs(){ try {
+                    localStorage.setItem('impl.passWidth', String(passWidth));
+                    localStorage.setItem('impl.hitchOffset', String(hitchOffset));
+                    localStorage.setItem('impl.mode', implementMode);
+                } catch(_){} }
+                function loadPrefs(){ try {
+                    var w = parseFloat(localStorage.getItem('impl.passWidth'));
+                    if (isFinite(w) && w > 0.1) passWidth = w;
+                    var h = parseFloat(localStorage.getItem('impl.hitchOffset'));
+                    if (isFinite(h) && h >= 0) hitchOffset = h;
+                    var m = localStorage.getItem('impl.mode');
+                    if (m === 'rigid' || m === 'axle') implementMode = m;
+                } catch(_){}
+                // reflect into inputs/buttons if present
+                var pw = document.getElementById('passWidth'); if (pw) pw.value = (''+passWidth).replace(/\.00$/, '');
+                var ho = document.getElementById('hitchOffset'); if (ho) ho.value = (''+hitchOffset).replace(/\.00$/, '');
+                if (typeof updateImplModeBtn === 'function') updateImplModeBtn();
+                }
                 function updateImplementUI() { var b = document.getElementById('btnImpl'); if (b) { b.textContent = 'Padargas: ' + (implement ? 'ĮJUNGTA' : 'IŠJUNGTA') + ' (Tarpas)'; b.classList.toggle('on', implement); } var flo = document.getElementById('applyToggle'); if (flo) { flo.classList.toggle('on', implement); flo.classList.toggle('off', !implement); flo.setAttribute('aria-pressed', implement ? 'true' : 'false'); flo.title = 'Padargas ' + (implement ? 'įjungtas' : 'išjungtas') + ' (Tarpas)'; } }
                 function toggleImplement() { implement = !implement; updateImplementUI(); }
 
@@ -961,6 +1032,7 @@
 
                 // A/B + single FAB flow
                 var AB = null, markA = null, markB = null;
+                var abDistanceMeters = null; // last confirmed A→B distance
                 var minDistForB = 15;              // minimum 15 m between A and B
                 var abStage = 'A', bEligible = false; // 'A' | 'A_wait' | 'B'
                 var nearestPass = 0, activePass = 0;
@@ -974,7 +1046,7 @@
 
                 function setABHere() {
                     // One-tap AB from current pose & heading
-                    markA = null; markB = null; bEligible = false; abStage = 'A'; abJustCreated = false;
+                    markA = null; markB = null; bEligible = false; abStage = 'A'; abJustCreated = false; abDistanceMeters = null;
                     updateABFab();
                     AB = { x0: x, y0: y, hdg: hdg };
                     activePass = Math.round(cteForPose(x, y) / passWidth);
@@ -983,7 +1055,7 @@
 
                 function startMarkA() {
                     // Start A->B capture
-                    AB = null; activePass = 0; nearestPass = 0;
+                    AB = null; activePass = 0; nearestPass = 0; abDistanceMeters = null;
                     markB = null; markA = { x: x, y: y };
                     bEligible = false; abStage = 'A_wait';
                     abJustCreated = false; // back to normal blue while waiting for B
@@ -997,6 +1069,8 @@
                     if (d < minDistForB) return; // not far enough yet
 
                     markB = { x: x, y: y };
+                    // store distance before building AB and clearing marks
+                    abDistanceMeters = Math.hypot(markB.x - markA.x, markB.y - markA.y);
                     buildABFromAB();
 
                     // reset markers & stage
@@ -1112,16 +1186,18 @@
                 var $ = function (id) { return document.getElementById(id) };
                 if ($('btnImpl')) $('btnImpl').onclick = toggleImplement;
                 if ($('btnSetAB')) $('btnSetAB').onclick = setABHere;
-                if ($('btnClearTrail')) $('btnClearTrail').onclick = function () { coverageQuads.length = 0; lastBar = null; };
-                if ($('btnReset')) $('btnReset').onclick = function () { x = 0; y = 0; hdg = 0; v = 0; steer = 0; coverageQuads.length = 0; lastBar = null; camX = x; camY = y; camRot = rotateOn ? hdg : 0; activePass = 0; nearestPass = 0; };
+                if ($('btnClearTrail')) $('btnClearTrail').onclick = function () { coverageQuads.length = 0; lastBar = null; totalAreaM2 = 0; };
+                if ($('btnReset')) $('btnReset').onclick = function () { x = 0; y = 0; hdg = 0; v = 0; steer = 0; coverageQuads.length = 0; lastBar = null; totalAreaM2 = 0; camX = x; camY = y; camRot = rotateOn ? hdg : 0; activePass = 0; nearestPass = 0; };
                 if ($('btnZoomIn')) $('btnZoomIn').onclick = function () { zoomAtScreenPoint(1.15, W / 2, H / 2); };
                 if ($('btnZoomOut')) $('btnZoomOut').onclick = function () { zoomAtScreenPoint(1 / 1.15, W / 2, H / 2); };
                 if ($('btnFollow')) $('btnFollow').onclick = function () { follow = !follow; updateFollowBtn(); if (follow) { camX = x; camY = y; if (rotateOn) camRot = hdg; } };
                 if ($('btnRotate')) $('btnRotate').onclick = function () { rotateOn = !rotateOn; updateRotateBtn(); if (rotateOn && follow) camRot = hdg; };
                 if ($('btnLowPower')) $('btnLowPower').onclick = function () { setLowPower(!LOWPOWER); };
                 if ($('btnSimToggle')) $('btnSimToggle').onclick = function () { setSimulatorOn(!simulatorOn); };
-                if ($('passWidth')) $('passWidth').oninput = function () { passWidth = Math.max(.1, parseFloat(this.value) || 24); };
-                if ($('hitchOffset')) $('hitchOffset').oninput = function () { hitchOffset = Math.max(0, parseFloat(this.value) || 4); };
+                if ($('passWidth')) $('passWidth').oninput = function () { passWidth = Math.max(.1, parseFloat(this.value) || 24); savePrefs(); };
+                if ($('hitchOffset')) $('hitchOffset').oninput = function () { hitchOffset = Math.max(0, parseFloat(this.value) || 4); savePrefs(); };
+                function updateImplModeBtn(){ var b = $('btnImplMode'); if (!b) return; b.textContent = 'Padargas: ' + (implementMode==='rigid' ? 'Standus' : 'Ant ašies'); }
+                if ($('btnImplMode')) $('btnImplMode').onclick = function(){ implementMode = (implementMode === 'rigid') ? 'axle' : 'rigid'; implHdg = hdg; updateImplModeBtn(); savePrefs(); };
 
                 // Spin buttons (±0.5 m)
                 function adjustNumberInput(id, delta, min, max) {
@@ -1147,6 +1223,8 @@
 
                 // Floating Implement toggle: bind after DOM is fully parsed
                 document.addEventListener('DOMContentLoaded', function () {
+                    // Load user preferences for implement
+                    loadPrefs();
                     // Floating implement toggle
                     var t = document.getElementById('applyToggle');
                     if (t) {
@@ -1194,6 +1272,7 @@
                     }
                     // sync UI
                     updateImplementUI();
+                    updateImplModeBtn();
                     updateABFab();
                     refreshABStatus();
                     // ensure correct visibility state (show hint/controls when sim is ON)
@@ -1229,7 +1308,19 @@
 
                 // Helpers
                 function angleLerp(a, b, t) { var d = ((b - a + Math.PI) % (2 * Math.PI)) - Math.PI; return a + d * t; }
-                function currentImplementBar() { var half = passWidth / 2; var hx = Math.sin(hdg), hy = -Math.cos(hdg); var nx = Math.cos(hdg), ny = Math.sin(hdg); var hitchX = x - hx * hitchOffset, hitchY = y - hy * hitchOffset; return { L: { x: hitchX - nx * half, y: hitchY - ny * half }, R: { x: hitchX + nx * half, y: hitchY + ny * half } } }
+                function currentImplementBar() {
+                    var half = passWidth / 2;
+                    // tractor tail location (base of triangle)
+                    var tx = x - Math.sin(hdg) * tractorTailBack;
+                    var ty = y - (-Math.cos(hdg)) * tractorTailBack;
+                    // implement heading (rigid uses tractor heading)
+                    var head = (implementMode === 'axle') ? implHdg : hdg;
+                    var nx = Math.cos(head), ny = Math.sin(head);
+                    // hitch point lies straight behind the tail along implement heading
+                    var hx2 = Math.sin(head), hy2 = -Math.cos(head);
+                    var hitchX = tx - hx2 * hitchOffset, hitchY = ty - hy2 * hitchOffset;
+                    return { L: { x: hitchX - nx * half, y: hitchY - ny * half }, R: { x: hitchX + nx * half, y: hitchY + ny * half }, H: { x: hitchX, y: hitchY }, T: { x: tx, y: ty }, head: head }
+                }
 
                 // Update
                 var frameTick = 0;
@@ -1246,11 +1337,47 @@
                     v = Math.max(-5, Math.min(cruiseMax, v));
                     // yaw + integrate
                     var yaw = maxYawRate * steer * (0.6 + 0.4 * Math.min(1, Math.abs(v) / 10)); hdg += yaw * dt; var vx = Math.sin(hdg) * v, vy = -Math.cos(hdg) * v; x += vx * dt; y += vy * dt;
+                    // implement articulation: rigid uses tractor heading; axle follows trailer kinematics
+                    if (implementMode === 'rigid') {
+                        implHdg = hdg;
+                    } else {
+                        var speed = Math.abs(v);
+                        // effective length from hitch to implement's center of rotation (approx)
+                        var L = Math.max(1.0, hitchOffset + 1.5);
+                        // trailer differential: d(implHdg)/dt = (v/L) * sin(hdg - implHdg)
+                        var rel = hdg - implHdg; rel = (rel + Math.PI) % (2 * Math.PI) - Math.PI;
+                        var rate = (speed / L) * Math.sin(rel);
+                        // clamp rate for stability/smoothness
+                        if (rate > implMaxRate) rate = implMaxRate; else if (rate < -implMaxRate) rate = -implMaxRate;
+                        implHdg += rate * dt;
+                    }
                     // camera
                     if (follow) { var lerp = .15; camX += (x - camX) * lerp; camY += (y - camY) * lerp; }
                     var targetRot = (rotateOn && follow) ? hdg : 0; camRot = angleLerp(camRot, targetRot, 0.18);
                     // coverage
-                    if (implement) { var bar = currentImplementBar(); if (lastBar) { if (!LOWPOWER || frameTick % 3 === 0) { coverageQuads.push({ l0: lastBar.L, r0: lastBar.R, l1: bar.L, r1: bar.R }); if (isFinite(coverageCap) && coverageQuads.length > coverageCap) coverageQuads.splice(0, coverageQuads.length - coverageCap); } } lastBar = bar; } else lastBar = null;
+                    if (implement) {
+                        var bar = currentImplementBar();
+                        if (lastBar) {
+                            if (!LOWPOWER || frameTick % 3 === 0) {
+                                var quad = { l0: lastBar.L, r0: lastBar.R, l1: bar.L, r1: bar.R };
+                                // area via polygon shoelace (l0->r0->r1->l1)
+                                var ax = quad.l0.x, ay = quad.l0.y, bx = quad.r0.x, by = quad.r0.y, cx = quad.r1.x, cy = quad.r1.y, dx = quad.l1.x, dy = quad.l1.y;
+                                var area = Math.abs((ax*by + bx*cy + cx*dy + dx*ay) - (ay*bx + by*cx + cy*dx + dy*ax)) * 0.5;
+                                quad.a = area; // store per-quad area in m^2
+                                coverageQuads.push(quad);
+                                totalAreaM2 += area;
+                                if (isFinite(coverageCap) && coverageQuads.length > coverageCap) {
+                                    var nRemove = coverageQuads.length - coverageCap;
+                                    var removed = coverageQuads.splice(0, nRemove);
+                                    for (var ri = 0; ri < removed.length; ri++) totalAreaM2 -= (removed[ri].a || 0);
+                                    if (totalAreaM2 < 0) totalAreaM2 = 0;
+                                }
+                            }
+                        }
+                        lastBar = bar;
+                    } else {
+                        lastBar = null;
+                    }
                 }
         // Draw
         function draw() {
@@ -1331,11 +1458,11 @@
         }
         }
 
-        // implement link + bar
+        // implement link + bar (pivot from tail; link aligned with implement heading)
         var bar = currentImplementBar();
-        var hx = Math.sin(hdg), hy = -Math.cos(hdg);
-        var hitchX = x - hx * hitchOffset, hitchY = y - hy * hitchOffset;
-        ctx.beginPath(); ctx.moveTo(x * ppm, y * ppm); ctx.lineTo(hitchX * ppm, hitchY * ppm);
+        var tailX = bar.T.x, tailY = bar.T.y;
+        var hitchX = bar.H.x, hitchY = bar.H.y;
+        ctx.beginPath(); ctx.moveTo(tailX * ppm, tailY * ppm); ctx.lineTo(hitchX * ppm, hitchY * ppm);
         ctx.strokeStyle = 'rgba(200,200,200,.7)'; ctx.lineWidth = 2; ctx.stroke();
         ctx.beginPath(); ctx.moveTo(bar.L.x * ppm, bar.L.y * ppm); ctx.lineTo(bar.R.x * ppm, bar.R.y * ppm);
         ctx.strokeStyle = '#ffd600'; ctx.lineWidth = 4; ctx.stroke();
@@ -1351,6 +1478,10 @@
         ctx.fillStyle = '#fff36b';
         if (!LOWPOWER) { ctx.shadowColor = '#fffbb5'; ctx.shadowBlur = 18; }
         ctx.fill();
+        // black outline around tractor
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.stroke();
         ctx.beginPath(); ctx.moveTo(0, -triL * ppm * 0.75); ctx.lineTo(0, -triL * ppm * 0.55);
         ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 3; ctx.stroke();
         ctx.restore();
@@ -1367,6 +1498,24 @@
         if ((e = document.getElementById('spdTxt'))) e.textContent = (v * 3.6).toFixed(1) + ' km/h';
         if ((e = document.getElementById('hdgTxt'))) e.textContent = (((hdg * 180 / Math.PI) % 360 + 360) % 360).toFixed(0) + '°';
         if ((e = document.getElementById('passTxt'))) e.textContent = activePass;
+        // Distance A→B
+        var distMeters = null;
+        if (typeof markA === 'object' && markA && typeof markB === 'object' && markB) {
+            distMeters = Math.hypot(markB.x - markA.x, markB.y - markA.y);
+        } else if (abDistanceMeters != null) {
+            distMeters = abDistanceMeters;
+        } else if (typeof markA === 'object' && markA) {
+            // show live distance from A to current position while waiting for B
+            distMeters = Math.hypot(x - markA.x, y - markA.y);
+        }
+        if ((e = document.getElementById('distTxt'))) {
+            if (distMeters == null) e.textContent = '—';
+            else e.textContent = (distMeters >= 1000 ? (distMeters / 1000).toFixed(2) + ' km' : distMeters.toFixed(0) + ' m');
+        }
+        // Worked area (ha)
+        if ((e = document.getElementById('areaTxt'))) e.textContent = (totalAreaM2 / 10000).toFixed(2) + ' ha';
+        // Productivity (ha/h)
+        if ((e = document.getElementById('rateTxt'))) e.textContent = (passWidth * v * 0.36).toFixed(2) + ' ha/h';
         updateLedBar(cte);
         }
 
@@ -1398,6 +1547,7 @@
         }
 
         // init
+        implHdg = hdg;
         camX = x; camY = y; camRot = rotateOn ? hdg : 0;
         updateFollowBtn(); updateRotateBtn(); updateLowPowerBtn();
         buildLeds(); refreshABStatus(); updateABFab(); updateImplementUI(); updateSimBtn();
