@@ -596,12 +596,12 @@
             user-select: none;
             white-space: nowrap;
             text-align: right;
-            min-width: 76px;
+            width: auto; /* fit text width */
         }
         @media (max-width: 700px) {
             .zoom-btn { width: 40px; height: 40px; }
             .zoom-btn svg { width: 20px; height: 20px; }
-            .zoom-label { font-size: 11px; padding: 3px 6px; }
+            .zoom-label { font-size: 11px; padding: 3px 6px; width: auto; }
         }
 
         .cte-block {
