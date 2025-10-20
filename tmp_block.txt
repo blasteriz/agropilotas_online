@@ -1,0 +1,17 @@
+     </button>
+     <div class="group-body" hidden="" id="panelMap">
+      <button class="btn toggle" id="btnFollow">
+       Sekimas
+      </button>
+      <button class="btn toggle" id="btnRotate">
+       Sukimas
+      </button>
+       
+      <button class="btn ghost" id="btnClearTrail">
+       Išvalyti padengimą
+      </button>
+      <button class="btn ghost" id="btnReset">
+       Atstatyti
+      </button>
+      <button class="btn ghost toggle" id="btnLowPower">
+       Paprastas rėžimas
