@@ -1765,5 +1765,37 @@
         requestAnimationFrame(frame);
         })();
    </script>
- </body>
+ <script>(function(){if(document.getElementById('dayNightToggle'))return;const THEME_DAY='day',THEME_NIGHT='night',compute=t=>{const h=t.getHours();return h>=7&&h<19?THEME_DAY:THEME_NIGHT},nextBoundary=t=>{const d=new Date(t.getFullYear(),t.getMonth(),t.getDate()),a=new Date(d.getFullYear(),d.getMonth(),d.getDate(),7,0,0,0),b=new Date(d.getFullYear(),d.getMonth(),d.getDate(),19,0,0,0);return t<a?a:t<b?b:new Date(d.getFullYear(),d.getMonth(),d.getDate()+1,7,0,0,0)},apply=e=>{document.body.classList.toggle('theme-day',e===THEME_DAY),document.body.classList.toggle('theme-night',e===THEME_NIGHT),document.body.setAttribute('data-theme',e)},setPref=(e,t)=>{try{localStorage.setItem('preferredTheme',e),t?localStorage.setItem('overrideUntil',''+t.getTime()):localStorage.removeItem('overrideUntil')}catch(n){}},getPref=()=>{try{const e=localStorage.getItem('overrideUntil'),t=e?Number(e):0;if(t&&Date.now()<t)return localStorage.getItem('preferredTheme');localStorage.removeItem('overrideUntil'),localStorage.removeItem('preferredTheme')}catch(e){}return null},findGear=()=>{const e=['#gear','#settings','#settingsBtn','#settingsButton','#btnSettings','.gear','.settings','.settings-button','.btn-settings','.gear-icon','[aria-label*=etting i]','[title*=etting i]','[data-icon=gear]','.fa-gear','.fa-cog','.mdi-cog','.icon-gear'];for(const t of e){const e=document.querySelector(t);if(e)return e}const t=Array.from(document.querySelectorAll('button,a,i,span,div'));return t.find(e=>(e.textContent||'').includes('⚙'))||null},container=document.createElement('div');container.id='theme-toggle-container',container.className='theme-toggle-container',container.title='Diena/Naktis';const btn=document.createElement('button');btn.id='dayNightToggle',btn.type='button',btn.className='theme-toggle-btn',btn.textContent='diena/naktis ';const clock=document.createElement('span');clock.id='theme-clock',clock.className='theme-clock',clock.textContent='--:--:--',btn.appendChild(clock),container.appendChild(btn);const style=document.createElement('style');style.id='theme-toggle-styles',style.textContent='.theme-toggle-container{position:fixed;top:56px;right:12px;z-index:10000}.theme-toggle-btn{display:inline-flex;align-items:center;gap:10px;padding:6px 10px;border-radius:8px;border:2px solid currentColor;cursor:pointer;font-weight:700;font-family:inherit}.theme-clock{font-variant-numeric:tabular-nums;letter-spacing:.5px}body.theme-day,body.theme-day .app,body.theme-day #map,body.theme-day .map,body.theme-day .leaflet-container,body.theme-day .leaflet-control,body.theme-day .leaflet-bar a,body.theme-day .control,body.theme-day .controls,body.theme-day .control-panel,body.theme-day .mapboxgl-ctrl,body.theme-day .ol-control,body.theme-day input,body.theme-day select,body.theme-day textarea,body.theme-day button{background-color:#fff!important;color:#000!important;font-weight:700!important;border-color:#000!important}body.theme-day a{color:#000!important;font-weight:700}body.theme-day .theme-toggle-btn{background:#fff;color:#000}body.theme-night,body.theme-night .app,body.theme-night #map,body.theme-night .map,body.theme-night .leaflet-container,body.theme-night .leaflet-control,body.theme-night .leaflet-bar a,body.theme-night .control,body.theme-night .controls,body.theme-night .control-panel,body.theme-night .mapboxgl-ctrl,body.theme-night .ol-control,body.theme-night input,body.theme-night select,body.theme-night textarea,body.theme-night button{background-color:#0b3d0b!important;color:#fff!important;font-weight:700!important;border-color:#fff!important}body.theme-night a{color:#fff!important;font-weight:700}body.theme-night .theme-toggle-btn{background:#0b3d0b;color:#fff}body.theme-night .leaflet-bar a,body.theme-day .leaflet-bar a{box-shadow:none!important}body.theme-night .leaflet-popup,body.theme-day .leaflet-popup{background:inherit!important;color:inherit!important}',document.head.appendChild(style);const run=()=>{const gear=findGear();if(gear&&gear.parentElement){container.style.position='static',container.style.top='',container.style.right='',gear.insertAdjacentElement('afterend',container)}else document.body.appendChild(container);const prefer=getPref(),initial=prefer||compute(new Date);apply(initial);const clockSpan=document.getElementById('theme-clock'),tick=()=>{const e=new Date,t=e.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});clockSpan&&(clockSpan.textContent=t)};tick(),setInterval(tick,1e3),setInterval(()=>{const e=getPref()||compute(new Date),t=document.body.classList.contains('theme-day')?THEME_DAY:THEME_NIGHT;e!==t&&apply(e)},3e4),btn.addEventListener('click',()=>{const e=document.body.classList.contains('theme-day')?THEME_DAY:THEME_NIGHT,t=e===THEME_DAY?THEME_NIGHT:THEME_DAY;apply(t),setPref(t,nextBoundary(new Date))})};'loading'===document.readyState?document.addEventListener('DOMContentLoaded',run):run();})();</script>
+</body>
 </html>
+
+<script>
+(function(){
+  function positionUnderGear(){
+    var gear=document.querySelector('#menuToggle');
+    var c=document.getElementById('theme-toggle-container');
+    if(!gear||!c) return;
+    var r=gear.getBoundingClientRect();
+    c.style.position='fixed';
+    c.style.left=Math.round(r.left)+'px';
+    c.style.top=Math.round(r.top+r.height+8)+'px';
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',positionUnderGear);
+  }else{ positionUnderGear(); }
+  window.addEventListener('resize',positionUnderGear);
+  window.addEventListener('scroll',positionUnderGear,{passive:true});
+})();
+</script>
+<style>
+  /* Theme overrides: map + HUD + toggle */
+  body.theme-day{background:#fff !important;color:#000 !important;}
+  body.theme-day canvas#map{background:#fff !important;}
+  body.theme-day .hud{background:rgba(255,255,255,0.45) !important;color:#000 !important;border-bottom:1px solid rgba(0,0,0,0.15) !important;}
+  body.theme-day #theme-toggle-container .theme-toggle-btn{background:#fff;color:#000;border-color:#000}
+
+  body.theme-night{background:#071309 !important;color:#fff !important;}
+  body.theme-night canvas#map{background:#0b3d0b !important;}
+  body.theme-night .hud{background:rgba(0,0,0,0.22) !important;color:#fff !important;border-bottom:1px solid rgba(255,255,255,0.14) !important;}
+  body.theme-night #theme-toggle-container .theme-toggle-btn{background:#0b3d0b;color:#fff;border-color:#fff}
+</style>
