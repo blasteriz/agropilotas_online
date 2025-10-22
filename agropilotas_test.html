@@ -240,8 +240,8 @@
             align-items: center;
             gap: 8px;
             padding: 8px 10px;
-            background: rgba(255,255,255,.08);
-            border: 1px solid rgba(255,255,255,.18);
+            background: transparent;
+            border: none;
             border-radius: 12px;
             margin-top: 6px
         }
@@ -511,32 +511,39 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255,255,255,.12);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,.35);
-            box-shadow: 0 14px 26px rgba(0,0,0,.35);
+            background: #bdbdbd;
+            color: #1f1f1f;
+            border: 2px solid rgba(0,0,0,0.25);
+            box-shadow: none;
             cursor: pointer;
             user-select: none;
             z-index: 8;
             touch-action: manipulation;
+            transition: background-color .25s ease, border-color .25s ease, color .25s ease, box-shadow .25s ease;
         }
 
             .apply-toggle .icon {
                 width: 36px;
                 height: 36px;
-                opacity: .95
+                opacity: .95;
+                stroke: currentColor;
+                fill: none;
             }
 
 
             /* ON/OFF visuals */
             .apply-toggle.on {
                 background: #00c853;
-                border-color: rgba(0,0,0,.15);
+                border-color: rgba(0,0,0,.18);
+                color: #fff;
                 box-shadow: 0 0 0 5px rgba(0,200,83,.2), 0 18px 30px rgba(0,0,0,.4);
             }
 
             .apply-toggle.off {
-                background: rgba(255,255,255,.12);
+                background: #bdbdbd;
+                border-color: rgba(0,0,0,.25);
+                color: #1f1f1f;
+                box-shadow: none;
             }
 
         /* Smaller on phones */
@@ -1109,16 +1116,12 @@
    </button>
       <!-- Floating Implement ON/OFF toggle (right side) -->
    <button id="applyToggle" class="apply-toggle on" aria-pressed="true" title="Padargas įjungtas (Tarpas)" aria-label="Padargas">
-    <!-- Implement coverage rows icon: bar + expanding rows -->
-     <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-       <!-- black outlines -->
-       <path d="M6 7 C 9 10, 11 4, 14 7" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-       <path d="M6 12 C 9 15, 11 9, 14 12" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-       <path d="M6 17 C 9 20, 11 14, 14 17" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-       <!-- dark green strokes -->
-       <path d="M6 7 C 9 10, 11 4, 14 7" stroke="#0a7a2a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-       <path d="M6 12 C 9 15, 11 9, 14 12" stroke="#0a7a2a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-       <path d="M6 17 C 9 20, 11 14, 14 17" stroke="#0a7a2a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Implement applied rate icon: arrow + route + pin -->
+     <svg class="icon" viewBox="0 0 48 48" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+       <path d="M14 32 L6 46 L22 46 Z" fill="currentColor" stroke="none"/>
+       <path d="M14 32 C14 22 24 24 26 18 C28 12 32 10 36 14" />
+       <path d="M36 10 a8 8 0 0 0-8 8 c0 6 8 16 8 16s8-10 8-16a8 8 0 0 0-8-8z" />
+       <circle cx="36" cy="18" r="3.5"/>
      </svg>
    </button>
    <script>
@@ -1594,14 +1597,16 @@
         ctx.translate(-camX * ppm, -camY * ppm);
 
         // background
-        ctx.fillStyle = '#155f25';
+        var isDayTheme = (typeof document !== 'undefined') && document.body && document.body.classList.contains('theme-day');
+        ctx.fillStyle = isDayTheme ? '#ffffff' : '#155f25';
         ctx.fillRect((camX * ppm) - W * 2, (camY * ppm) - H * 2, W * 4, H * 4);
 
         // grid
         if (!LOWPOWER || (frameTick % 2 === 0)) {
         var step = (LOWPOWER ? 20 : 10) * ppm;
         ctx.beginPath();
-        ctx.strokeStyle = 'rgba(255,255,255,.14)';
+        var gridColor = isDayTheme ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.14)';
+        ctx.strokeStyle = gridColor;
         ctx.lineWidth = 1;
         for (var gx = (Math.floor((camX * ppm - W) / step) * step); gx < (camX * ppm + W); gx += step) {
         ctx.moveTo(gx, camY * ppm - H);
