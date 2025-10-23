@@ -1765,7 +1765,192 @@
         requestAnimationFrame(frame);
         })();
    </script>
- <script>(function(){if(document.getElementById('dayNightToggle'))return;const THEME_DAY='day',THEME_NIGHT='night',compute=t=>{const h=t.getHours();return h>=7&&h<19?THEME_DAY:THEME_NIGHT},nextBoundary=t=>{const d=new Date(t.getFullYear(),t.getMonth(),t.getDate()),a=new Date(d.getFullYear(),d.getMonth(),d.getDate(),7,0,0,0),b=new Date(d.getFullYear(),d.getMonth(),d.getDate(),19,0,0,0);return t<a?a:t<b?b:new Date(d.getFullYear(),d.getMonth(),d.getDate()+1,7,0,0,0)},apply=e=>{document.body.classList.toggle('theme-day',e===THEME_DAY),document.body.classList.toggle('theme-night',e===THEME_NIGHT),document.body.setAttribute('data-theme',e)},setPref=(e,t)=>{try{localStorage.setItem('preferredTheme',e),t?localStorage.setItem('overrideUntil',''+t.getTime()):localStorage.removeItem('overrideUntil')}catch(n){}},getPref=()=>{try{const e=localStorage.getItem('overrideUntil'),t=e?Number(e):0;if(t&&Date.now()<t)return localStorage.getItem('preferredTheme');localStorage.removeItem('overrideUntil'),localStorage.removeItem('preferredTheme')}catch(e){}return null},findGear=()=>{const e=['#gear','#settings','#settingsBtn','#settingsButton','#btnSettings','.gear','.settings','.settings-button','.btn-settings','.gear-icon','[aria-label*=etting i]','[title*=etting i]','[data-icon=gear]','.fa-gear','.fa-cog','.mdi-cog','.icon-gear'];for(const t of e){const e=document.querySelector(t);if(e)return e}const t=Array.from(document.querySelectorAll('button,a,i,span,div'));return t.find(e=>(e.textContent||'').includes('⚙'))||null},container=document.createElement('div');container.id='theme-toggle-container',container.className='theme-toggle-container',container.title='Diena/Naktis';const btn=document.createElement('button');btn.id='dayNightToggle',btn.type='button',btn.className='theme-toggle-btn',btn.textContent='diena/naktis ';const clock=document.createElement('span');clock.id='theme-clock',clock.className='theme-clock',clock.textContent='--:--:--',btn.appendChild(clock),container.appendChild(btn);const style=document.createElement('style');style.id='theme-toggle-styles',style.textContent='.theme-toggle-container{position:fixed;top:56px;right:12px;z-index:10000}.theme-toggle-btn{display:inline-flex;align-items:center;gap:10px;padding:6px 10px;border-radius:8px;border:2px solid currentColor;cursor:pointer;font-weight:700;font-family:inherit}.theme-clock{font-variant-numeric:tabular-nums;letter-spacing:.5px}body.theme-day,body.theme-day .app,body.theme-day #map,body.theme-day .map,body.theme-day .leaflet-container,body.theme-day .leaflet-control,body.theme-day .leaflet-bar a,body.theme-day .control,body.theme-day .controls,body.theme-day .control-panel,body.theme-day .mapboxgl-ctrl,body.theme-day .ol-control,body.theme-day input,body.theme-day select,body.theme-day textarea,body.theme-day button{background-color:#fff!important;color:#000!important;font-weight:700!important;border-color:#000!important}body.theme-day a{color:#000!important;font-weight:700}body.theme-day .theme-toggle-btn{background:#fff;color:#000}body.theme-night,body.theme-night .app,body.theme-night #map,body.theme-night .map,body.theme-night .leaflet-container,body.theme-night .leaflet-control,body.theme-night .leaflet-bar a,body.theme-night .control,body.theme-night .controls,body.theme-night .control-panel,body.theme-night .mapboxgl-ctrl,body.theme-night .ol-control,body.theme-night input,body.theme-night select,body.theme-night textarea,body.theme-night button{background-color:#0b3d0b!important;color:#fff!important;font-weight:700!important;border-color:#fff!important}body.theme-night a{color:#fff!important;font-weight:700}body.theme-night .theme-toggle-btn{background:#0b3d0b;color:#fff}body.theme-night .leaflet-bar a,body.theme-day .leaflet-bar a{box-shadow:none!important}body.theme-night .leaflet-popup,body.theme-day .leaflet-popup{background:inherit!important;color:inherit!important}',document.head.appendChild(style);const run=()=>{const gear=findGear();if(gear&&gear.parentElement){container.style.position='static',container.style.top='',container.style.right='',gear.insertAdjacentElement('afterend',container)}else document.body.appendChild(container);const prefer=getPref(),initial=prefer||compute(new Date);apply(initial);const clockSpan=document.getElementById('theme-clock'),tick=()=>{const e=new Date,t=e.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});clockSpan&&(clockSpan.textContent=t)};tick(),setInterval(tick,1e3),setInterval(()=>{const e=getPref()||compute(new Date),t=document.body.classList.contains('theme-day')?THEME_DAY:THEME_NIGHT;e!==t&&apply(e)},3e4),btn.addEventListener('click',()=>{const e=document.body.classList.contains('theme-day')?THEME_DAY:THEME_NIGHT,t=e===THEME_DAY?THEME_NIGHT:THEME_DAY;apply(t),setPref(t,nextBoundary(new Date))})};'loading'===document.readyState?document.addEventListener('DOMContentLoaded',run):run();})();</script>
+ <script>
+(function () {
+  if (document.getElementById('dayNightToggle')) return;
+
+  const THEME_DAY = 'day';
+  const THEME_NIGHT = 'night';
+
+  const compute = (now) => {
+    const hour = now.getHours();
+    return hour >= 7 && hour < 19 ? THEME_DAY : THEME_NIGHT;
+  };
+
+  const nextBoundary = (now) => {
+    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dayTime = new Date(dayStart.getFullYear(), dayStart.getMonth(), dayStart.getDate(), 7);
+    const nightTime = new Date(dayStart.getFullYear(), dayStart.getMonth(), dayStart.getDate(), 19);
+    if (now < dayTime) return dayTime;
+    if (now < nightTime) return nightTime;
+    return new Date(dayStart.getFullYear(), dayStart.getMonth(), dayStart.getDate() + 1, 7);
+  };
+
+  const apply = (mode) => {
+    document.body.classList.toggle('theme-day', mode === THEME_DAY);
+    document.body.classList.toggle('theme-night', mode === THEME_NIGHT);
+    document.body.setAttribute('data-theme', mode);
+
+    const icon = document.getElementById('theme-icon');
+    if (icon) {
+      icon.textContent = mode === THEME_DAY ? '☀' : '🌙';
+      icon.setAttribute('data-theme-icon', mode);
+    }
+  };
+
+  const setPref = (mode, until) => {
+    try {
+      localStorage.setItem('preferredTheme', mode);
+      if (until) {
+        localStorage.setItem('overrideUntil', String(until.getTime()));
+      } else {
+        localStorage.removeItem('overrideUntil');
+      }
+    } catch (err) {
+      /* ignore */
+    }
+  };
+
+  const getPref = () => {
+    try {
+      const rawUntil = localStorage.getItem('overrideUntil');
+      const until = rawUntil ? Number(rawUntil) : 0;
+      if (until && Date.now() < until) {
+        return localStorage.getItem('preferredTheme');
+      }
+      localStorage.removeItem('overrideUntil');
+      localStorage.removeItem('preferredTheme');
+    } catch (err) {
+      /* ignore */
+    }
+    return null;
+  };
+
+  const findGear = () => {
+    const selectors = [
+      '#gear',
+      '#settings',
+      '#settingsBtn',
+      '#settingsButton',
+      '#btnSettings',
+      '.gear',
+      '.settings',
+      '.settings-button',
+      '.btn-settings',
+      '.gear-icon',
+      '[aria-label*=etting i]',
+      '[title*=etting i]',
+      '[data-icon=gear]',
+      '.fa-gear',
+      '.fa-cog',
+      '.mdi-cog',
+      '.icon-gear'
+    ];
+    for (const selector of selectors) {
+      const match = document.querySelector(selector);
+      if (match) return match;
+    }
+    const candidates = Array.from(document.querySelectorAll('button,a,i,span,div'));
+    return candidates.find((el) => (el.textContent || '').toLowerCase().includes('settings')) || null;
+  };
+
+  const container = document.createElement('div');
+  container.id = 'theme-toggle-container';
+  container.className = 'theme-toggle-container';
+  container.title = 'Diena/Naktis';
+
+  const btn = document.createElement('button');
+  btn.id = 'dayNightToggle';
+  btn.type = 'button';
+  btn.className = 'theme-toggle-btn';
+  btn.setAttribute('aria-label', 'Perjungti dieną/naktį');
+
+  const icon = document.createElement('span');
+  icon.id = 'theme-icon';
+  icon.className = 'theme-icon';
+  icon.setAttribute('aria-hidden', 'true');
+  btn.appendChild(icon);
+
+  const clock = document.createElement('span');
+  clock.id = 'theme-clock';
+  clock.className = 'theme-clock';
+  clock.textContent = '00:00:00';
+  btn.appendChild(clock);
+
+  container.appendChild(btn);
+
+  const style = document.createElement('style');
+  style.id = 'theme-toggle-styles';
+  style.textContent = `
+.theme-toggle-container{position:fixed;top:56px;right:12px;z-index:10000}
+.theme-toggle-btn{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:8px;border:2px solid currentColor;cursor:pointer;font-weight:700;font-family:inherit}
+.theme-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;font-size:18px;line-height:1;transition:transform .2s ease}
+.theme-clock{font-variant-numeric:tabular-nums;letter-spacing:.5px;min-width:70px;text-align:center}
+body.theme-day .theme-toggle-btn{background:#fff;color:#000}
+body.theme-night .theme-toggle-btn{background:#0b3d0b;color:#fff}
+body.theme-day,body.theme-day .app,body.theme-day #map,body.theme-day .map,body.theme-day .leaflet-container,body.theme-day .leaflet-control,body.theme-day .leaflet-bar a,body.theme-day .control,body.theme-day .controls,body.theme-day .control-panel,body.theme-day .mapboxgl-ctrl,body.theme-day .ol-control,body.theme-day input,body.theme-day select,body.theme-day textarea,body.theme-day button{background-color:#fff!important;color:#000!important;font-weight:700!important;border-color:#000!important}
+body.theme-day a{color:#000!important;font-weight:700}
+body.theme-night,body.theme-night .app,body.theme-night #map,body.theme-night .map,body.theme-night .leaflet-container,body.theme-night .leaflet-control,body.theme-night .leaflet-bar a,body.theme-night .control,body.theme-night .controls,body.theme-night .control-panel,body.theme-night .mapboxgl-ctrl,body.theme-night .ol-control,body.theme-night input,body.theme-night select,body.theme-night textarea,body.theme-night button{background-color:#0b3d0b!important;color:#fff!important;font-weight:700!important;border-color:#fff!important}
+body.theme-night a{color:#fff!important;font-weight:700}
+body.theme-night .leaflet-bar a,body.theme-day .leaflet-bar a{box-shadow:none!important}
+body.theme-night .leaflet-popup,body.theme-day .leaflet-popup{background:inherit!important;color:inherit!important}
+`;
+  document.head.appendChild(style);
+
+  const run = () => {
+    const gear = findGear();
+    if (gear && gear.parentElement) {
+      container.style.position = 'static';
+      container.style.top = '';
+      container.style.right = '';
+      gear.insertAdjacentElement('afterend', container);
+    } else {
+      document.body.appendChild(container);
+    }
+
+    const prefer = getPref();
+    const initial = prefer || compute(new Date());
+    apply(initial);
+
+    const clockSpan = document.getElementById('theme-clock');
+    const tick = () => {
+      const now = new Date();
+      const formatted = now.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      if (clockSpan) {
+        clockSpan.textContent = formatted;
+      }
+    };
+    tick();
+    setInterval(tick, 1000);
+
+    setInterval(() => {
+      const preferred = getPref() || compute(new Date());
+      const current = document.body.classList.contains('theme-day') ? THEME_DAY : THEME_NIGHT;
+      if (preferred !== current) {
+        apply(preferred);
+      }
+    }, 30000);
+
+    btn.addEventListener('click', () => {
+      const current = document.body.classList.contains('theme-day') ? THEME_DAY : THEME_NIGHT;
+      const next = current === THEME_DAY ? THEME_NIGHT : THEME_DAY;
+      apply(next);
+      setPref(next, nextBoundary(new Date()));
+    });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run);
+  } else {
+    run();
+  }
+})();
+</script>
 </body>
 </html>
 
@@ -1793,9 +1978,15 @@
   body.theme-day canvas#map{background:#fff !important;}
   body.theme-day .hud{background:rgba(255,255,255,0.45) !important;color:#000 !important;border-bottom:1px solid rgba(0,0,0,0.15) !important;}
   body.theme-day #theme-toggle-container .theme-toggle-btn{background:#fff;color:#000;border-color:#000}
+  body.theme-day #fabAB{background:#1e88e5 !important;color:#fff !important;border-color:#1e88e5 !important;}
+  body.theme-day #fabAB.fab-b{background:#00c853 !important;color:#fff !important;border-color:#00c853 !important;}
+  body.theme-day #fabAB.fab-a-attn{background:#ff5252 !important;color:#fff !important;border-color:#ff5252 !important;}
 
   body.theme-night{background:#071309 !important;color:#fff !important;}
   body.theme-night canvas#map{background:#0b3d0b !important;}
   body.theme-night .hud{background:rgba(0,0,0,0.22) !important;color:#fff !important;border-bottom:1px solid rgba(255,255,255,0.14) !important;}
   body.theme-night #theme-toggle-container .theme-toggle-btn{background:#0b3d0b;color:#fff;border-color:#fff}
+  body.theme-night #fabAB{background:#1e88e5 !important;color:#fff !important;border-color:#1e88e5 !important;}
+  body.theme-night #fabAB.fab-b{background:#00c853 !important;color:#fff !important;border-color:#00c853 !important;}
+  body.theme-night #fabAB.fab-a-attn{background:#ff5252 !important;color:#fff !important;border-color:#ff5252 !important;}
 </style>
