@@ -827,11 +827,9 @@
  <body>
   <!-- Floating menu button (gear) -->
   <button aria-label="Meniu" class="menu-toggle" id="menuToggle">
-   <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-     <!-- Cleaner gear (cog) icon -->
-     <path d="M11.25 5.25c.44-1.3 2.31-1.3 2.75 0l.28.83c.26.79 1.14 1.2 1.9.89l.85-.36c1.26-.54 2.52.72 1.98 1.98l-.36.85c-.31.76.1 1.64.89 1.9l.83.28c1.3.44 1.3 2.31 0 2.75l-.83.28c-.79.26-1.2 1.14-.89 1.9l.36.85c.54 1.26-.72 2.52-1.98 1.98l-.85-.36c-.76-.31-1.64.1-1.9.89l-.28.83c-.44 1.3-2.31 1.3-2.75 0l-.28-.83c-.26-.79-1.14-1.2-1.9-.89l-.85.36c-1.26.54-2.52-.72-1.98-1.98l.36-.85c.31-.76-.1-1.64-.89-1.9l-.83-.28c-1.3-.44-1.3-2.31 0-2.75l.83-.28c.79-.26 1.2-1.14.89-1.9l-.36-.85c-.54-1.26.72-2.52 1.98-1.98l.85.36c.76.31 1.64-.1 1.9-.89l.28-.83Z"/>
-     <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-   </svg>
+   <svg class="icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="miter" stroke-linecap="butt" fill-rule="evenodd" clip-rule="evenodd" aria-hidden="true">
+  <path d="M 22.50,12.00 L 19.73,14.07 L 21.09,17.25 L 17.66,17.66 L 17.25,21.09 L 14.07,19.73 L 12.00,22.50 L 9.93,19.73 L 6.75,21.09 L 6.34,17.66 L 2.91,17.25 L 4.27,14.07 L 1.50,12.00 L 4.27,9.93 L 2.91,6.75 L 6.34,6.34 L 6.75,2.91 L 9.93,4.27 L 12.00,1.50 L 14.07,4.27 L 17.25,2.91 L 17.66,6.34 L 21.09,6.75 L 19.73,9.93 Z M 12,12 m -3,0 a 3,3 0 1,0 6,0 a 3,3 0 1,0 -6,0"/>
+</svg>
   </button>
   <div class="hud">
    <div class="stats-row">
@@ -1109,17 +1107,21 @@
    </button>
       <!-- Floating Implement ON/OFF toggle (right side) -->
    <button id="applyToggle" class="apply-toggle on" aria-pressed="true" title="Padargas įjungtas (Tarpas)" aria-label="Padargas">
-    <!-- Implement coverage rows icon: bar + expanding rows -->
-     <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-       <!-- black outlines -->
-       <path d="M6 7 C 9 10, 11 4, 14 7" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-       <path d="M6 12 C 9 15, 11 9, 14 12" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-       <path d="M6 17 C 9 20, 11 14, 14 17" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-       <!-- dark green strokes -->
-       <path d="M6 7 C 9 10, 11 4, 14 7" stroke="#0a7a2a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-       <path d="M6 12 C 9 15, 11 9, 14 12" stroke="#0a7a2a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-       <path d="M6 17 C 9 20, 11 14, 14 17" stroke="#0a7a2a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-     </svg>
+        <!-- Implement icon: tractor triangle towing sprayer boom -->
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M12 5 L16 13 H8 Z" fill="#ffd600" stroke="#000" stroke-width="1"/>
+  <line x1="12" y1="13" x2="12" y2="17" />
+  <line x1="5" y1="17" x2="19" y2="17" />
+  <line x1="9.67" y1="16" x2="9.67" y2="18" />
+  <line x1="14.33" y1="16" x2="14.33" y2="18" />
+  <circle cx="7" cy="18.5" r="0.8" />
+  <circle cx="9.5" cy="18.5" r="0.8" />
+  <circle cx="12" cy="18.5" r="0.8" />
+  <circle cx="14.5" cy="18.5" r="0.8" />
+  <circle cx="17" cy="18.5" r="0.8" />
+  <rect class="trail" x="5" y="19" width="14" height="3" rx="1.2" ry="1.2"/>
+  <line class="off-strike" x1="4" y1="4" x2="20" y2="20"/>
+</svg>
    </button>
    <script>
     // === v22.3 — Stable core + big CTE readout + floating Implement toggle ===
@@ -1594,14 +1596,14 @@
         ctx.translate(-camX * ppm, -camY * ppm);
 
         // background
-        ctx.fillStyle = '#155f25';
+        ctx.fillStyle = (document.body.classList.contains('theme-day') ? '#ffffff' : '#155f25');
         ctx.fillRect((camX * ppm) - W * 2, (camY * ppm) - H * 2, W * 4, H * 4);
 
         // grid
         if (!LOWPOWER || (frameTick % 2 === 0)) {
         var step = (LOWPOWER ? 20 : 10) * ppm;
         ctx.beginPath();
-        ctx.strokeStyle = 'rgba(255,255,255,.14)';
+        ctx.strokeStyle = (document.body.classList.contains('theme-day') ? 'rgba(0,0,0,.18)' : 'rgba(255,255,255,.14)');
         ctx.lineWidth = 1;
         for (var gx = (Math.floor((camX * ppm - W) / step) * step); gx < (camX * ppm + W); gx += step) {
         ctx.moveTo(gx, camY * ppm - H);
@@ -1633,13 +1635,13 @@
         ctx.lineTo(ex2 * ppm, ey2 * ppm);
         if (k === activePass) {
         ctx.save();
-        ctx.strokeStyle = 'rgba(160,255,245,1)';
+        ctx.strokeStyle = (document.body.classList.contains('theme-day') ? '#8B0000' : 'rgba(160,255,245,1)');
         ctx.lineWidth = LOWPOWER ? 4 : 6;
         if (!LOWPOWER) { ctx.shadowColor = 'rgba(140,240,218,0.85)'; ctx.shadowBlur = 16; }
         ctx.stroke();
         ctx.restore();
         } else {
-        ctx.strokeStyle = 'rgba(160,255,245,.6)';
+        ctx.strokeStyle = (document.body.classList.contains('theme-day') ? 'rgba(139,0,0,0.6)' : 'rgba(160,255,245,.6)');
         ctx.lineWidth = 1.8;
         ctx.stroke();
         }
@@ -1989,4 +1991,190 @@ body.theme-night .leaflet-popup,body.theme-day .leaflet-popup{background:inherit
   body.theme-night #fabAB{background:#1e88e5 !important;color:#fff !important;border-color:#1e88e5 !important;}
   body.theme-night #fabAB.fab-b{background:#00c853 !important;color:#fff !important;border-color:#00c853 !important;}
   body.theme-night #fabAB.fab-a-attn{background:#ff5252 !important;color:#fff !important;border-color:#ff5252 !important;}
+  /* Day mode explicit: gear/menu buttons */
+  body.theme-day .menu-toggle{background:#fff !important;color:#000 !important;border-color:#000 !important;}
+  body.theme-day .controls, body.theme-day .controls .group, body.theme-day .group-body{color:#000 !important;}
+  body.theme-day .controls .btn, body.theme-day .group-body .btn{background:#fff !important;color:#000 !important;border-color:#000 !important;}
+  body.theme-day .controls svg, body.theme-day .group .ico{color:#000 !important;}
+</style>
+
+/* Stripe + HUD + controls overrides (in-document style) */
+<style id="fix-stripe-overrides">
+  /* Make HUD and controls area fully transparent (no bar) */
+  .hud{background:transparent !important;border-bottom:0 !important;box-shadow:none !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;}
+  body.theme-day .hud, body.theme-night .hud{background:transparent !important;}
+
+  /* Remove any theme bar under controls */
+  body.theme-day .controls, body.theme-night .controls,
+  body.theme-day .control,  body.theme-night .control,
+  .stats-row, .ledbar-wrap, .ledbar { background: transparent !important; box-shadow:none !important; border:0 !important; }
+
+  /* Remove stripe/underline from group toggles */
+  #btnGuideSettings,#btnImplSettings,#btnMapSettings{border-bottom:0 !important;}
+  body.theme-night #btnGuideSettings,body.theme-night #btnImplSettings,body.theme-night #btnMapSettings,
+  body.theme-day #btnGuideSettings,body.theme-day #btnImplSettings,body.theme-day #btnMapSettings{
+    box-shadow:none !important; border-color:transparent !important; background:transparent !important;
+  }
+  #btnGuideSettings::after,#btnImplSettings::after,#btnMapSettings::after{content:none !important;}
+
+  /* Keep day-mode labels/buttons white where requested */
+  body.theme-day #btnGuideSettings, body.theme-day #btnImplSettings, body.theme-day #btnMapSettings{
+    background:#fff !important; color:#000 !important; border-color:transparent !important;
+  }
+
+  /* Ensure canvas not painting an extra base behind HUD */
+  canvas#map{background:transparent !important;}
+</style>
+<script>
+(function(){
+  var s=document.getElementById('fix-stripe-overrides');
+  if(s && document.head && s.parentNode !== document.head){
+    try{ document.head.appendChild(s); }catch(_){ }
+  }
+})();
+</script>
+<style id="menu-outline-buttons">
+  /* Outline-style buttons in expandable menu */
+  body.theme-day .group .group-body .btn,
+  body.theme-night .group .group-body .btn { 
+    background: transparent !important; 
+    border: 2px solid currentColor !important; 
+    border-radius: 12px !important; 
+    color: inherit !important; 
+    box-shadow: none !important;
+  }
+  body.theme-day .group .group-body .btn { color:#000 !important; }
+  body.theme-night .group .group-body .btn { color:#fff !important; }
+
+  /* Group toggle headers also look like buttons */
+  body.theme-day .group .group-toggle,
+  body.theme-night .group .group-toggle {
+    background: transparent !important;
+    border: 2px solid currentColor !important;
+    border-radius: 12px !important;
+    color: inherit !important;
+    box-shadow: none !important;
+  }
+  body.theme-day .group .group-toggle { color:#000 !important; }
+  body.theme-night .group .group-toggle { color:#fff !important; }
+
+  /* Spin +/- pills inside number controls */
+  body.theme-day .group .group-body .btn.spin,
+  body.theme-night .group .group-body .btn.spin { border-radius: 9999px !important; }
+
+  /* Subtle hover fills */
+  body.theme-day .group .group-body .btn:hover,
+  body.theme-day .group .group-toggle:hover { background: rgba(0,0,0,0.06) !important; }
+  body.theme-night .group .group-body .btn:hover,
+  body.theme-night .group .group-toggle:hover { background: rgba(255,255,255,0.08) !important; }
+
+  /* Inputs match outline style */
+  body.theme-day .group .group-body input[type="number"] { background: transparent !important; border: 2px solid #000 !important; color:#000 !important; border-radius:10px !important; }
+  body.theme-night .group .group-body input[type="number"] { background: transparent !important; border: 2px solid #fff !important; color:#fff !important; border-radius:10px !important; }
+
+  /* Ensure icons use currentColor */
+  .group-toggle .ico { color: currentColor !important; stroke: currentColor !important; }
+</style>
+
+<style id="apply-toggle-restyle">
+  /* Implement toggle vivid ON and grayed OFF */
+  .apply-toggle.on { 
+    background: #00e65a !important; 
+    color: #fff !important; 
+    border-color: rgba(0,0,0,.15) !important; 
+    box-shadow: 0 0 0 6px rgba(0,230,90,.20), 0 18px 30px rgba(0,0,0,.40) !important; 
+  }
+  .apply-toggle.off { 
+    background: #6a6a6a !important; 
+    color: #eeeeee !important; 
+    border-color: rgba(0,0,0,.25) !important; 
+    box-shadow: none !important; 
+  }
+  /* Slight hover cue */
+  .apply-toggle:hover { filter: brightness(1.05); }
+</style>
+<style id="apply-toggle-theme-override">
+  body.theme-day #applyToggle.apply-toggle.on { background:#00e65a !important; color:#fff !important; border-color:rgba(0,0,0,.15) !important; }
+  body.theme-day #applyToggle.apply-toggle.off { background:#9aa0a6 !important; color:#fff !important; border-color:rgba(0,0,0,.2) !important; }
+  body.theme-night #applyToggle.apply-toggle.on { background:#00e65a !important; color:#fff !important; }
+  body.theme-night #applyToggle.apply-toggle.off { background:#6a6a6a !important; color:#eeeeee !important; }
+</style>
+<style id="apply-toggle-icon-outline">
+  /* Bigger implement icon with 1px black outline */
+  #applyToggle .icon { 
+    width: 48px !important; 
+    height: 48px !important; 
+    /* 1px faux stroke outline in all directions */
+    filter: drop-shadow(0 1px 0 #000) drop-shadow(0 -1px 0 #000)
+            drop-shadow(1px 0 0 #000) drop-shadow(-1px 0  #000);
+  }
+  @media (max-width: 900px) {
+    #applyToggle .icon { width: 42px !important; height: 42px !important; }
+  }
+  @media (max-width: 600px) {
+    #applyToggle .icon { width: 36px !important; height: 36px !important; }
+  }
+</style>
+
+
+<style id="apply-toggle-icon-states">
+  .apply-toggle.on .icon .trail { display:block; fill:#0a7a2a !important; stroke:none; }
+  .apply-toggle.off .icon .trail { display:none; }
+  .apply-toggle.off .icon .off-strike { display:block; stroke:#ff5252; stroke-width:2.5; stroke-linecap:round; }
+  .apply-toggle.on .icon .off-strike { display:none; }
+</style>
+
+
+
+
+<style id="hud-day-blur">
+  body.theme-day .hud{
+    background: rgba(255,255,255,0.42) !important;
+    backdrop-filter: blur(8px) saturate(1.05) !important;
+    -webkit-backdrop-filter: blur(8px) saturate(1.05) !important;
+    border-bottom: 1px solid rgba(0,0,0,0.12) !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08) !important;
+  }
+</style>
+<style id="group-toggle-outline-visibility">
+  /* Day: rounded outline + black icons for collapsible buttons */
+  body.theme-day #btnGuideSettings,
+  body.theme-day #btnImplSettings,
+  body.theme-day #btnMapSettings{
+    background: transparent !important;
+    color: #000 !important;
+    border: 2px solid #000 !important;
+    border-radius: 14px !important;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.06) !important;
+  }
+  body.theme-day #btnGuideSettings .ico,
+  body.theme-day #btnImplSettings .ico,
+  body.theme-day #btnMapSettings .ico,
+  body.theme-day #btnGuideSettings svg,
+  body.theme-day #btnImplSettings svg,
+  body.theme-day #btnMapSettings svg{
+    color: #000 !important; stroke: #000 !important;
+  }
+  /* Hide legacy pseudo-icons so inline SVG takes precedence */
+  body.theme-day #btnGuideSettings.group-toggle::before,
+  body.theme-day #btnImplSettings.group-toggle::before,
+  body.theme-day #btnMapSettings.group-toggle::before{ display:none !important; }
+
+  /* Night: rounded outline + white icons for consistency */
+  body.theme-night #btnGuideSettings,
+  body.theme-night #btnImplSettings,
+  body.theme-night #btnMapSettings{
+    background: transparent !important;
+    color: #fff !important;
+    border: 2px solid #fff !important;
+    border-radius: 14px !important;
+  }
+  body.theme-night #btnGuideSettings .ico,
+  body.theme-night #btnImplSettings .ico,
+  body.theme-night #btnMapSettings .ico,
+  body.theme-night #btnGuideSettings svg,
+  body.theme-night #btnImplSettings svg,
+  body.theme-night #btnMapSettings svg{
+    color: #fff !important; stroke: #fff !important;
+  }
 </style>
