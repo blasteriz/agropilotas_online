@@ -252,6 +252,7 @@
             margin-right: 8px;
             vertical-align: middle;
             opacity: .95;
+            color: inherit; /* follow theme (day: black, night: white) */
         }
             /* ensure [hidden] actually hides despite .group-body display:flex */
             .group-body[hidden] {
@@ -280,15 +281,15 @@
         }
         /* Gairės */
         #btnGuideSettings.group-toggle::before {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d9e5ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='4' y1='8' x2='20' y2='8'/%3E%3Cline x1='4' y1='12' x2='20' y2='12'/%3E%3Cline x1='4' y1='16' x2='20' y2='16'/%3E%3Ctext x='3' y='8' dy='3' font-size='7' fill='%23d9e5ff'%3EA%3C/text%3E%3Ctext x='18' y='16' dy='3' font-size='7' fill='%23d9e5ff'%3EB%3C/text%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='4' y1='8' x2='20' y2='8'/%3E%3Cline x1='4' y1='12' x2='20' y2='12'/%3E%3Cline x1='4' y1='16' x2='20' y2='16'/%3E%3Ctext x='3' y='8' dy='3' font-size='7' fill='currentColor'%3EA%3C/text%3E%3Ctext x='18' y='16' dy='3' font-size='7' fill='currentColor'%3EB%3C/text%3E%3C/svg%3E");
         }
         /* Padargas */
         #btnImplSettings.group-toggle::before {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d9e5ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 8H20'/%3E%3Cpath d='M6 10v2M10 10v2M14 10v2M18 10v2'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 8H20'/%3E%3Cpath d='M6 10v2M10 10v2M14 10v2M18 10v2'/%3E%3C/svg%3E");
         }
         /* Žemėlapis */
         #btnMapSettings.group-toggle::before {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d9e5ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z'/%3E%3Cpath d='M9 4v16M15 6v16'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z'/%3E%3Cpath d='M9 4v16M15 6v16'/%3E%3C/svg%3E");
         }
 
         /* Number input spin controls */
@@ -499,6 +500,13 @@
             display: none !important;
         }
 
+        /* Visually remove specific Map menu buttons (logic remains) */
+        #btnFollow,
+        #btnRotate,
+        #btnLowPower {
+            display: none !important;
+        }
+
         /* Floating Implement toggle (right side, big, with icon) */
         .apply-toggle {
             position: absolute;
@@ -584,7 +592,7 @@
             user-select: none;
         }
         .zoom-btn svg { width: 22px; height: 22px; opacity: .95; }
-        .zoom-group { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+        .zoom-group { display: flex; align-items: center; justify-content: flex-end; gap: 8px; cursor: pointer; }
         .zoom-label {
             color: #fff;
             font-size: 12px;
@@ -597,6 +605,7 @@
             white-space: nowrap;
             text-align: right;
             width: auto; /* fit text width */
+            cursor: pointer;
         }
         @media (max-width: 700px) {
             .zoom-btn { width: 40px; height: 40px; }
@@ -698,6 +707,8 @@
             border: 1px solid rgba(255,255,255,.25);
             box-shadow: 0 8px 18px rgba(0,0,0,.25)
         }
+        /* Apply tabular numerals to all chip values */
+        .chip .val { font-variant-numeric: tabular-nums; }
 
             .chip .ico {
                 width: 18px;
@@ -714,6 +725,21 @@
                 font-weight: 800;
                 margin-left: 4px
             }
+
+        /* Fixed-width numeric readouts to prevent jumpiness */
+        .num-fixed-3 { display:inline-block; min-width:3ch; text-align:right; font-variant-numeric:tabular-nums; }
+        /* HUD numeric labels: adaptive width with tabular numerals (stop jiggle) */
+        #distTxt, #rateTxt, #hdgTxt, #passTxt, #spdTxt, #areaTxt, #widthTxt {
+            display: inline-block;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            width: auto !important;
+            min-width: 0 !important;
+        }
+        .cte-num-slot { display:inline-block; width:4ch; text-align:center; font-variant-numeric:tabular-nums; }
+
+        /* Keep units from wrapping awkwardly */
+        .chip .unit { white-space: nowrap; }
 
         /* Big speed card */
         .speed-card {
@@ -875,7 +901,7 @@
        <path d="M12 7v5"/>
       </svg>
       <span class="label">Našumas</span>
-      <span class="val" id="rateTxt">0.00 ha/h</span>
+      <span class="val" id="rateTxt">0 Ha/Val.</span>
      </div>
      <!-- Implement width -->
      <div class="chip">
@@ -938,9 +964,7 @@
        <span class="arrow" id="cteLeftArrow">
         ◄
        </span>
-       <span class="num" id="cteNum">
-        0 cm
-       </span>
+        <span class="num"><span id="cteNum" class="cte-num-slot">0</span> <span class="unit">cm</span></span>
        <span class="arrow" id="cteRightArrow">
         ►
        </span>
@@ -982,8 +1006,8 @@
       <label class="stat">
        Darbinis plotis
        <div class="num-spin">
-        <button type="button" class="btn ghost spin" id="btnPassWidthMinus">−</button>
-        <input id="passWidth" step="0.1" type="number" value="24"/>
+        <button type="button" class="btn ghost spin" id="btnPassWidthMinus">-</button>
+        <input id="passWidth" step="0.01" type="number" value="24"/>
         <button type="button" class="btn ghost spin" id="btnPassWidthPlus">+</button>
         <span>m</span>
        </div>
@@ -992,7 +1016,7 @@
       Sukabos atstumas
       <div class="num-spin">
        <button type="button" class="btn ghost spin" id="btnHitchMinus">-</button>
-       <input id="hitchOffset" step="0.1" type="number" value="4"/>
+       <input id="hitchOffset" step="0.01" type="number" value="4"/>
        <button type="button" class="btn ghost spin" id="btnHitchPlus">+</button>
        <span>m</span>
       </div>
@@ -1345,7 +1369,7 @@
 
                     // --- center readout + colored arrows ---
                     var num = document.getElementById('cteNum');
-                    if (num) num.textContent = Math.round(m * 100) + ' cm';
+                    if (num) num.textContent = padFig(Math.round(m * 100), 4);
 
                     var la = document.getElementById('cteLeftArrow');
                     var ra = document.getElementById('cteRightArrow');
@@ -1369,12 +1393,76 @@
 
                 // Buttons
                 var $ = function (id) { return document.getElementById(id) };
+                // Figure-space padding for stable-width numbers without fixed containers
+                var FIG = '\u2007';
+                function padFig(str, width){ str = String(str); while (str.length < width) str = FIG + str; return str; }
                 if ($('btnImpl')) $('btnImpl').onclick = toggleImplement;
                 if ($('btnSetAB')) $('btnSetAB').onclick = setABHere;
                 // removed btnClearTrail UI/button; clearing action disabled
-                if ($('btnReset')) $('btnReset').onclick = function () { x = 0; y = 0; hdg = 0; v = 0; steer = 0; coverageQuads.length = 0; lastBar = null; totalAreaM2 = 0; camX = x; camY = y; camRot = rotateOn ? hdg : 0; activePass = 0; nearestPass = 0; };
-                if ($('btnZoomIn')) $('btnZoomIn').onclick = function () { zoomAtScreenPoint(1.15, W / 2, H / 2); };
-                if ($('btnZoomOut')) $('btnZoomOut').onclick = function () { zoomAtScreenPoint(1 / 1.15, W / 2, H / 2); };
+                if ($('btnReset')) $('btnReset').onclick = function () {
+                    // Reset pose and camera
+                    x = 0; y = 0; hdg = 0; v = 0; steer = 0;
+                    camX = x; camY = y; camRot = rotateOn ? hdg : 0;
+                    // Instantly align implement with tractor heading
+                    implHdg = hdg;
+
+                    // Clear coverage/application and area counters
+                    coverageQuads.length = 0; lastBar = null; totalAreaM2 = 0;
+
+                    // Remove AB guidance and reset related state/counters
+                    AB = null; markA = null; markB = null; abDistanceMeters = null;
+                    abStage = 'A'; bEligible = false; abJustCreated = false;
+                    activePass = 0; nearestPass = 0;
+
+                    // Update UI readouts immediately
+                    var e;
+                    if ((e = document.getElementById('areaTxt'))) e.textContent = padFig('0.00', 5) + ' ha';
+                    if ((e = document.getElementById('rateTxt'))) e.textContent = padFig('0', 3) + ' Ha/Val.';
+                    if ((e = document.getElementById('distTxt'))) e.textContent = padFig('-', 3) + ' m';
+                    if ((e = document.getElementById('passTxt'))) e.textContent = padFig('0', 3);
+                    refreshABStatus();
+                    if (typeof updateABFab === 'function') updateABFab();
+                };
+                // Zoom buttons: handle click + touch and also delegate on group container
+                (function(){
+                    var zin = $('btnZoomIn');
+                    if (zin) {
+                        var zinHandler = function (e) { if (e) e.preventDefault(); zoomAtScreenPoint(1.15, W / 2, H / 2); };
+                        zin.onclick = zinHandler;
+                        try { zin.addEventListener('touchstart', zinHandler, { passive: false }); } catch(_) { zin.addEventListener('touchstart', zinHandler); }
+                        try { zin.addEventListener('pointerdown', zinHandler); } catch(_) {}
+                        if (zin.parentElement) {
+                            zin.parentElement.addEventListener('click', function(e){ e.preventDefault(); zinHandler(e); });
+                            try { zin.parentElement.addEventListener('touchstart', function(e){ e.preventDefault(); zinHandler(e); }, { passive: false }); } catch(_) { zin.parentElement.addEventListener('touchstart', function(e){ e.preventDefault(); zinHandler(e); }); }
+                        }
+                    }
+                    var zout = $('btnZoomOut');
+                    if (zout) {
+                        var zoutHandler = function (e) { if (e) e.preventDefault(); zoomAtScreenPoint(1 / 1.15, W / 2, H / 2); };
+                        zout.onclick = zoutHandler;
+                        try { zout.addEventListener('touchstart', zoutHandler, { passive: false }); } catch(_) { zout.addEventListener('touchstart', zoutHandler); }
+                        try { zout.addEventListener('pointerdown', zoutHandler); } catch(_) {}
+                        if (zout.parentElement) {
+                            zout.parentElement.addEventListener('click', function(e){ e.preventDefault(); zoutHandler(e); });
+                            try { zout.parentElement.addEventListener('touchstart', function(e){ e.preventDefault(); zoutHandler(e); }, { passive: false }); } catch(_) { zout.parentElement.addEventListener('touchstart', function(e){ e.preventDefault(); zoutHandler(e); }); }
+                        }
+                        // Capture-phase fallback: trigger when clicking within button rect even if overlaid
+                        try {
+                            var captureClick = function(e){
+                                var r = zout.getBoundingClientRect();
+                                var x = (e.touches && e.touches[0] ? e.touches[0].clientX : e.clientX);
+                                var y = (e.touches && e.touches[0] ? e.touches[0].clientY : e.clientY);
+                                if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+                                    e.preventDefault();
+                                    zoutHandler(e);
+                                }
+                            };
+                            document.addEventListener('click', captureClick, true);
+                            document.addEventListener('pointerdown', captureClick, true);
+                            document.addEventListener('touchstart', captureClick, { capture: true, passive: false });
+                        } catch(_) {}
+                    }
+                })();
                 if ($('btnFollow')) $('btnFollow').onclick = function () { follow = !follow; updateFollowBtn(); if (follow) { camX = x; camY = y; if (rotateOn) camRot = hdg; } };
                 if ($('btnRotate')) $('btnRotate').onclick = function () { rotateOn = !rotateOn; updateRotateBtn(); if (rotateOn && follow) camRot = hdg; };
                 if ($('btnLowPower')) $('btnLowPower').onclick = function () { setLowPower(!LOWPOWER); };
@@ -1398,6 +1486,26 @@
                 var bwp = $('btnPassWidthPlus'); if (bwp) bwp.onclick = function(){ adjustNumberInput('passWidth', +0.5, 0.1, 100); };
                 var bhm = $('btnHitchMinus'); if (bhm) bhm.onclick = function(){ adjustNumberInput('hitchOffset', -0.5, 0.0, 50); };
                 var bhp = $('btnHitchPlus'); if (bhp) bhp.onclick = function(){ adjustNumberInput('hitchOffset', +0.5, 0.0, 50); };
+
+                // Override: fine 1 cm steps, hold to accelerate to 10 cm
+                (function(){
+                    function bindSpinHold(btnId, inputId, sign, min, max){
+                        var btn = $(btnId); if (!btn) return;
+                        var holdTimer = null, accelTimer = null, step = 0.01; // 1 cm
+                        var tick = function(){ adjustNumberInput(inputId, sign * step, min, max); };
+                        var stop = function(){ if (holdTimer) { clearInterval(holdTimer); holdTimer = null; } if (accelTimer) { clearTimeout(accelTimer); accelTimer = null; } };
+                        var start = function(e){ if (e) e.preventDefault(); step = 0.01; tick(); stop(); holdTimer = setInterval(tick, 100); accelTimer = setTimeout(function(){ step = 0.10; }, 700); };
+                        btn.onclick = null; // disable old single-click handler
+                        btn.addEventListener('mousedown', start);
+                        try { btn.addEventListener('touchstart', start, { passive: false }); } catch(_) { btn.addEventListener('touchstart', start); }
+                        ['mouseup','mouseleave','touchend','touchcancel'].forEach(function(ev){ btn.addEventListener(ev, stop); });
+                        btn.addEventListener('click', function(e){ if (e) e.preventDefault(); });
+                    }
+                    bindSpinHold('btnPassWidthMinus', 'passWidth', -1, 0.1, 100);
+                    bindSpinHold('btnPassWidthPlus',  'passWidth', +1, 0.1, 100);
+                    bindSpinHold('btnHitchMinus',     'hitchOffset', -1, 0.0, 50);
+                    bindSpinHold('btnHitchPlus',      'hitchOffset', +1, 0.0, 50);
+                })();
 
                 // Collapsible panels
                 (function () {
@@ -1702,9 +1810,9 @@
         // HUD text & LEDs
         var cte = cteRelativeToActivePass(x, y);
         var e;
-        if ((e = document.getElementById('spdTxt'))) e.textContent = (v * 3.6).toFixed(1) + ' km/h';
-        if ((e = document.getElementById('hdgTxt'))) e.textContent = (((hdg * 180 / Math.PI) % 360 + 360) % 360).toFixed(0) + '°';
-        if ((e = document.getElementById('passTxt'))) e.textContent = activePass;
+        if ((e = document.getElementById('spdTxt'))) e.textContent = padFig((v * 3.6).toFixed(1), 4) + ' km/h';
+        if ((e = document.getElementById('hdgTxt'))) e.textContent = padFig((((hdg * 180 / Math.PI) % 360 + 360) % 360).toFixed(0), 3) + '°';
+        if ((e = document.getElementById('passTxt'))) e.textContent = padFig(activePass, 3);
         // Distance A→B
         var distMeters = null;
         if (typeof markA === 'object' && markA && typeof markB === 'object' && markB) {
@@ -1716,17 +1824,23 @@
             distMeters = Math.hypot(x - markA.x, y - markA.y);
         }
         if ((e = document.getElementById('distTxt'))) {
-            if (distMeters == null) e.textContent = '—';
-            else e.textContent = (distMeters >= 1000 ? (distMeters / 1000).toFixed(2) + ' km' : distMeters.toFixed(0) + ' m');
+            if (distMeters == null) e.textContent = padFig('-', 3) + ' m';
+            else {
+                e.textContent = padFig(distMeters.toFixed(0), 3) + ' m';
+            }
         }
         // Worked area (ha)
-        if ((e = document.getElementById('areaTxt'))) e.textContent = (totalAreaM2 / 10000).toFixed(2) + ' ha';
+        if ((e = document.getElementById('areaTxt'))) e.textContent = padFig((totalAreaM2 / 10000).toFixed(2), 5) + ' ha';
         // Productivity (ha/h)
-        if ((e = document.getElementById('rateTxt'))) e.textContent = (passWidth * v * 0.36).toFixed(2) + ' ha/h';
+        if ((e = document.getElementById('rateTxt'))) {
+            var rate = passWidth * v * 0.36; // area rate
+            e.textContent = padFig(Math.round(rate), 3) + ' Ha/Val.';
+        }
         // Implement width (m)
         if ((e = document.getElementById('widthTxt'))) {
             var wtxt = passWidth.toFixed(2).replace(/\.00$/, '');
-            e.textContent = wtxt + ' m';
+            var tgt = wtxt.indexOf('.') >= 0 ? 5 : 3;
+            e.textContent = padFig(wtxt, tgt) + ' m';
         }
         updateLedBar(cte);
         }
@@ -1773,6 +1887,9 @@
 
   const THEME_DAY = 'day';
   const THEME_NIGHT = 'night';
+  // Robust SVG icons to avoid encoding issues on some systems
+  const SUN_SVG = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><circle cx='12' cy='12' r='5'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>";
+  const MOON_SVG = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z'/></svg>";
 
   const compute = (now) => {
     const hour = now.getHours();
@@ -1827,6 +1944,16 @@
     }
     return null;
   };
+
+  // Inject proper day/night icons using SVG (robust across encodings)
+  function renderThemeIcon(){
+    try {
+      var icon = document.getElementById('theme-icon');
+      if (!icon) return;
+      var isDay = document.body.classList.contains('theme-day');
+      icon.innerHTML = isDay ? SUN_SVG : MOON_SVG;
+    } catch(_){}
+  }
 
   const findGear = () => {
     const selectors = [
@@ -1913,6 +2040,7 @@ body.theme-night .leaflet-popup,body.theme-day .leaflet-popup{background:inherit
     const prefer = getPref();
     const initial = prefer || compute(new Date());
     apply(initial);
+    renderThemeIcon();
 
     const clockSpan = document.getElementById('theme-clock');
     const tick = () => {
@@ -1935,6 +2063,7 @@ body.theme-night .leaflet-popup,body.theme-day .leaflet-popup{background:inherit
       const current = document.body.classList.contains('theme-day') ? THEME_DAY : THEME_NIGHT;
       if (preferred !== current) {
         apply(preferred);
+        renderThemeIcon();
       }
     }, 30000);
 
@@ -1942,6 +2071,7 @@ body.theme-night .leaflet-popup,body.theme-day .leaflet-popup{background:inherit
       const current = document.body.classList.contains('theme-day') ? THEME_DAY : THEME_NIGHT;
       const next = current === THEME_DAY ? THEME_NIGHT : THEME_DAY;
       apply(next);
+      renderThemeIcon();
       setPref(next, nextBoundary(new Date()));
     });
   };
@@ -2158,7 +2288,7 @@ body.theme-night .leaflet-popup,body.theme-day .leaflet-popup{background:inherit
   /* Hide legacy pseudo-icons so inline SVG takes precedence */
   body.theme-day #btnGuideSettings.group-toggle::before,
   body.theme-day #btnImplSettings.group-toggle::before,
-  body.theme-day #btnMapSettings.group-toggle::before{ display:none !important; }
+  body.theme-day #btnMapSettings.group-toggle::before{ display:inline-block !important; }
 
   /* Night: rounded outline + white icons for consistency */
   body.theme-night #btnGuideSettings,
