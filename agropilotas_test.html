@@ -709,6 +709,13 @@
         }
         /* Apply tabular numerals to all chip values */
         .chip .val { font-variant-numeric: tabular-nums; }
+        .chip.gps { cursor: pointer; transition: background .2s ease, border-color .2s ease, color .2s ease; }
+        .chip.gps-connecting { background: rgba(255,193,7,.28); border-color: rgba(255,193,7,.55); color: #fff3cd; }
+        .chip.gps-connected { background: rgba(56,208,108,.28); border-color: rgba(56,208,108,.65); color: #d9ffe7; }
+        .chip.gps-error { background: rgba(244,67,54,.28); border-color: rgba(244,67,54,.55); color: #ffe3df; }
+        body.theme-day .chip.gps-connecting { color: #6c4a00; }
+        body.theme-day .chip.gps-connected { color: #075c2d; }
+        body.theme-day .chip.gps-error { color: #7f1d1d; }
 
             .chip .ico {
                 width: 18px;
@@ -873,6 +880,15 @@
       <span class="val" id="hdgTxt">
        0°
       </span>
+     </div>
+     <div class="chip gps gps-error" id="gpsChip" title="Pakeisti NodeMCU adresa">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+       <circle cx="12" cy="12" r="9"></circle>
+       <path d="M12 3v3M12 18v3M3 12h3M18 12h3"></path>
+       <circle cx="12" cy="12" r="3"></circle>
+      </svg>
+      <span class="label">GPS</span>
+      <span class="val" id="gpsStatusText">Atsijunge</span>
      </div>
      <!-- Distance A→B -->
      <div class="chip">
@@ -1186,6 +1202,91 @@
                 var x = 0, y = 0, hdg = 0; // 0 rad = up
                 var v = 0, steer = 0, maxYawRate = 1.3, accel = 2.2, drag = 0.6, reverseAccel = 3.0, dt = 0.016;
                 var cruiseOn = false, cruiseSet = 0, cruiseMax = 10;
+
+                // --- GPS bridge state ---
+                var gpsEnabled = false;
+                var gpsPose = null;          // latest normalized GPS fix (lat/lon heading, speed)
+                var gpsOrigin = null;        // anchor lat/lon for local projection
+                var gpsLastFixMs = 0;
+
+                function notifyGpsState(detail) {
+                    try {
+                        document.dispatchEvent(new CustomEvent('agro:gps-state', { detail: detail || null }));
+                    } catch (_) {}
+                }
+
+                function setGpsEnabled(flag) {
+                    gpsEnabled = !!flag;
+                    notifyGpsState({ type: 'toggle', enabled: gpsEnabled });
+                }
+
+                function resetGpsOrigin() {
+                    gpsOrigin = null;
+                    notifyGpsState({ type: 'origin-reset' });
+                }
+
+                function ensureGpsOrigin(lat, lon) {
+                    if (!gpsOrigin && isFinite(lat) && isFinite(lon)) {
+                        gpsOrigin = { lat: lat, lon: lon };
+                        notifyGpsState({ type: 'origin-set', origin: gpsOrigin });
+                    }
+                }
+
+                function latLonToLocal(lat, lon) {
+                    if (!gpsOrigin) return { x: x, y: y };
+                    var lat0 = gpsOrigin.lat * Math.PI / 180;
+                    var dLat = (lat - gpsOrigin.lat) * Math.PI / 180;
+                    var dLon = (lon - gpsOrigin.lon) * Math.PI / 180;
+                    var earth = 6378137;
+                    var localX = earth * dLon * Math.cos(lat0);
+                    var localY = -earth * dLat;
+                    return { x: localX, y: localY };
+                }
+
+                function applyGpsPose() {
+                    if (!gpsPose) return false;
+                    if (!isFinite(gpsPose.lat) || !isFinite(gpsPose.lon)) return false;
+                    ensureGpsOrigin(gpsPose.lat, gpsPose.lon);
+                    if (!gpsOrigin) return false;
+                    var local = latLonToLocal(gpsPose.lat, gpsPose.lon);
+                    x = local.x;
+                    y = local.y;
+                    if (typeof gpsPose.hdg === 'number' && isFinite(gpsPose.hdg)) {
+                        hdg = gpsPose.hdg;
+                    }
+                    if (typeof gpsPose.speed === 'number' && isFinite(gpsPose.speed)) {
+                        v = gpsPose.speed;
+                    }
+                    gpsLastFixMs = performance.now();
+                    return true;
+                }
+
+                function normalizeGpsSample(sample) {
+                    if (!sample || typeof sample.lat !== 'number' || typeof sample.lon !== 'number') return;
+                    var headingRad = null;
+                    if (typeof sample.heading_rad === 'number') {
+                        headingRad = sample.heading_rad;
+                    } else {
+                        var headingDeg = null;
+                        if (typeof sample.heading_deg === 'number') headingDeg = sample.heading_deg;
+                        else if (typeof sample.course_deg === 'number') headingDeg = sample.course_deg;
+                        else if (typeof sample.heading === 'number') headingDeg = sample.heading;
+                        if (headingDeg !== null) headingRad = headingDeg * Math.PI / 180;
+                    }
+                    var speedMps = null;
+                    if (typeof sample.speed_mps === 'number') speedMps = sample.speed_mps;
+                    else if (typeof sample.speed_kph === 'number') speedMps = sample.speed_kph / 3.6;
+                    else if (typeof sample.speed_knots === 'number') speedMps = sample.speed_knots * 0.514444;
+                    else if (typeof sample.speed === 'number') speedMps = sample.speed;
+                    gpsPose = {
+                        lat: sample.lat,
+                        lon: sample.lon,
+                        hdg: headingRad,
+                        speed: speedMps,
+                        raw: sample
+                    };
+                    notifyGpsState({ type: 'fix', pose: gpsPose });
+                }
                 function adjustCruise(delta) { cruiseSet = Math.max(0, Math.min(cruiseMax, cruiseSet + delta)); cruiseOn = cruiseSet > 0; }
 
                 // Implement & coverage (default ON)
@@ -1638,18 +1739,54 @@
                 // Update
                 var frameTick = 0;
                 function update() {
-                    // A→B stage
-                    if (markA && !AB) { var dNow = Math.hypot(x - markA.x, y - markA.y); var eligible = dNow >= minDistForB; if (eligible !== bEligible) { bEligible = eligible; } var newStage = bEligible ? 'B' : 'A_wait'; if (newStage !== abStage) { abStage = newStage; updateABFab(); } }
-                    // steering
-                    var si = 0; if (keys['ArrowLeft']) si -= 1; if (keys['ArrowRight']) si += 1; steer = si;
-                    // speed
-                    if (keys['ArrowUp']) { v += accel * dt; cruiseOn = false; }
-                    else if (keys['ArrowDown']) { v -= reverseAccel * dt; cruiseOn = false; }
-                    else if (cruiseOn) { if (v < cruiseSet - 0.02) v = Math.min(cruiseSet, v + accel * dt); else if (v > cruiseSet + 0.02) v = Math.max(cruiseSet, v - reverseAccel * dt); }
-                    else { if (v > 0) v = Math.max(0, v - drag * dt); else if (v < 0) v = Math.min(0, v + drag * dt); }
-                    v = Math.max(-5, Math.min(cruiseMax, v));
-                    // yaw + integrate
-                    var yaw = maxYawRate * steer * (0.6 + 0.4 * Math.min(1, Math.abs(v) / 10)); hdg += yaw * dt; var vx = Math.sin(hdg) * v, vy = -Math.cos(hdg) * v; x += vx * dt; y += vy * dt;
+                    // A/B stage
+                    if (markA && !AB) {
+                        var dNow = Math.hypot(x - markA.x, y - markA.y);
+                        var eligible = dNow >= minDistForB;
+                        if (eligible !== bEligible) { bEligible = eligible; }
+                        var newStage = bEligible ? 'B' : 'A_wait';
+                        if (newStage !== abStage) { abStage = newStage; updateABFab(); }
+                    }
+
+                    var usingGps = false;
+                    if (gpsEnabled && gpsPose) {
+                        usingGps = applyGpsPose();
+                    }
+
+                    if (!usingGps) {
+                        // steering via keyboard/touch
+                        var si = 0;
+                        if (keys['ArrowLeft']) si -= 1;
+                        if (keys['ArrowRight']) si += 1;
+                        steer = si;
+
+                        // speed model
+                        if (keys['ArrowUp']) { v += accel * dt; cruiseOn = false; }
+                        else if (keys['ArrowDown']) { v -= reverseAccel * dt; cruiseOn = false; }
+                        else if (cruiseOn) {
+                            if (v < cruiseSet - 0.02) v = Math.min(cruiseSet, v + accel * dt);
+                            else if (v > cruiseSet + 0.02) v = Math.max(cruiseSet, v - reverseAccel * dt);
+                        } else {
+                            if (v > 0) v = Math.max(0, v - drag * dt);
+                            else if (v < 0) v = Math.min(0, v + drag * dt);
+                        }
+                        v = Math.max(-5, Math.min(cruiseMax, v));
+
+                        // integrate pose
+                        var yaw = maxYawRate * steer * (0.6 + 0.4 * Math.min(1, Math.abs(v) / 10));
+                        hdg += yaw * dt;
+                        var vx = Math.sin(hdg) * v, vy = -Math.cos(hdg) * v;
+                        x += vx * dt; y += vy * dt;
+                    } else {
+                        steer = 0;
+                        cruiseOn = false;
+                        if (typeof v !== 'number' || !isFinite(v)) v = 0;
+                        else {
+                            if (v > 30) v = 30;
+                            if (v < -5) v = -5;
+                        }
+                    }
+
                     // implement articulation: rigid uses tractor heading; axle follows trailer kinematics
                     if (implementMode === 'rigid') {
                         implHdg = hdg;
@@ -1856,6 +1993,28 @@
         ctx.fillText(label, wx * ppm, wy * ppm);
         ctx.restore();
         }
+
+        // GPS bridge API exposed globally for hardware integrations
+        window.AgroGpsBridge = {
+            enable: function () { setGpsEnabled(true); },
+            disable: function () { setGpsEnabled(false); },
+            setEnabled: function (flag) { setGpsEnabled(flag); },
+            feed: function (sample, opts) {
+                normalizeGpsSample(sample);
+                if (!gpsEnabled && (!opts || opts.autoEnable !== false)) setGpsEnabled(true);
+            },
+            setOrigin: function (lat, lon) {
+                if (lat && typeof lat === 'object') { lon = lat.lon; lat = lat.lat; }
+                if (!isFinite(lat) || !isFinite(lon)) return;
+                gpsOrigin = { lat: lat, lon: lon };
+                notifyGpsState({ type: 'origin-set', origin: gpsOrigin, manual: true });
+            },
+            clearOrigin: resetGpsOrigin,
+            getOrigin: function () { return gpsOrigin ? { lat: gpsOrigin.lat, lon: gpsOrigin.lon } : null; },
+            isEnabled: function () { return gpsEnabled; },
+            lastPose: function () { return gpsPose ? Object.assign({}, gpsPose) : null; },
+            lastFixAgeMs: function () { return gpsLastFixMs ? performance.now() - gpsLastFixMs : Infinity; }
+        };
 
         // Main loop
         var last = performance.now(), carry = 0;
@@ -2081,6 +2240,143 @@ body.theme-night .leaflet-popup,body.theme-day .leaflet-popup{background:inherit
   } else {
     run();
   }
+})();
+</script>
+<script>
+(function(){
+  if (!window.AgroGpsBridge) { return; }
+  var chip = document.getElementById('gpsChip');
+  var statusEl = document.getElementById('gpsStatusText');
+  if (!chip || !statusEl) { return; }
+
+  var bridge = window.AgroGpsBridge;
+  var ws = null;
+  var reconnectTimer = null;
+  var desired = true;
+  var lastFix = null;
+
+  var wsUrl = 'ws://192.168.4.1:81/';
+  try {
+    var saved = localStorage.getItem('gps.wsUrl');
+    if (saved) wsUrl = saved;
+  } catch (_) {}
+
+  function setState(cls, text) {
+    chip.classList.remove('gps-error','gps-connecting','gps-connected');
+    chip.classList.add('gps');
+    if (cls) chip.classList.add(cls);
+    if (text) statusEl.textContent = text;
+  }
+
+  function summaryText() {
+    var parts = [];
+    var pose = bridge.lastPose && bridge.lastPose();
+    if (pose && typeof pose.speed === 'number') {
+      parts.push((pose.speed * 3.6).toFixed(1) + ' km/h');
+    }
+    if (lastFix && typeof lastFix.sats === 'number') {
+      parts.push(lastFix.sats + ' sats');
+    }
+    var ageMs = bridge.lastFixAgeMs ? bridge.lastFixAgeMs() : Infinity;
+    if (isFinite(ageMs)) {
+      parts.push((ageMs / 1000).toFixed(1) + ' s');
+    }
+    return parts.join(' | ') || 'Prisijungta';
+  }
+
+  function updateFromBridge() {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      statusEl.textContent = summaryText();
+    }
+  }
+
+  document.addEventListener('agro:gps-state', updateFromBridge);
+  setInterval(updateFromBridge, 1000);
+
+  function clearReconnect() {
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+  }
+
+  function scheduleReconnect() {
+    if (!desired) return;
+    if (reconnectTimer) return;
+    reconnectTimer = setTimeout(function(){
+      reconnectTimer = null;
+      connect();
+    }, 3500);
+  }
+
+  function connect() {
+    if (!desired) return;
+    clearReconnect();
+    if (ws) {
+      try { ws.close(); } catch (_) {}
+      ws = null;
+    }
+    setState('gps-connecting', 'Jungiama...');
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch (err) {
+      console.error('[GPS] net url', err);
+      setState('gps-error', 'URL klaida');
+      scheduleReconnect();
+      return;
+    }
+    ws.onopen = function() {
+      if (bridge.enable) bridge.enable();
+      setState('gps-connected', summaryText());
+    };
+    ws.onmessage = function(evt) {
+      try {
+        var payload = JSON.parse(evt.data);
+        lastFix = payload;
+        if (bridge.feed) bridge.feed(payload);
+        statusEl.textContent = summaryText();
+      } catch (err) {
+        console.error('[GPS] JSON klaida', err);
+      }
+    };
+    ws.onerror = function() {
+      setState('gps-error', 'Rysio klaida');
+    };
+    ws.onclose = function() {
+      ws = null;
+      if (desired && bridge.setEnabled) bridge.setEnabled(false);
+      if (desired) {
+        setState('gps-error', 'Atsijunge');
+        scheduleReconnect();
+      } else {
+        setState('gps-error', 'Isjungta');
+      }
+    };
+  }
+
+  chip.addEventListener('click', function() {
+    var next = prompt('NodeMCU WebSocket URL', wsUrl);
+    if (!next) return;
+    wsUrl = next.trim();
+    try { localStorage.setItem('gps.wsUrl', wsUrl); } catch (_) {}
+    desired = true;
+    connect();
+  });
+
+  chip.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    desired = !desired;
+    if (!desired) {
+      if (ws) { try { ws.close(); } catch (_) {} }
+      setState('gps-error', 'Isjungta');
+      if (bridge.setEnabled) bridge.setEnabled(false);
+    } else {
+      connect();
+    }
+  });
+
+  setState('gps-error', 'Atsijunge');
+  connect();
 })();
 </script>
 </body>
