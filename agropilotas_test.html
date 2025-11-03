@@ -43,6 +43,19 @@
             overflow: visible
         }
 
+        .hud-bottom {
+            top: auto;
+            bottom: 0;
+            border-bottom: 0 !important;
+            border-top: 1px solid rgba(255,255,255,.14) !important;
+            padding: 18px 12px 12px;
+            align-items: center
+        }
+
+        .hud-bottom .chips {
+            justify-content: center
+        }
+
         .hud-row {
             display: none
         }
@@ -736,7 +749,7 @@
         /* Fixed-width numeric readouts to prevent jumpiness */
         .num-fixed-3 { display:inline-block; min-width:3ch; text-align:right; font-variant-numeric:tabular-nums; }
         /* HUD numeric labels: adaptive width with tabular numerals (stop jiggle) */
-        #distTxt, #rateTxt, #hdgTxt, #passTxt, #spdTxt, #areaTxt, #widthTxt {
+        #distTxt, #rateTxtBottom, #hdgTxt, #passTxt, #spdTxt, #areaTxtBottom, #widthTxt {
             display: inline-block;
             text-align: right;
             font-variant-numeric: tabular-nums;
@@ -869,17 +882,11 @@
     <div class="chips">
      <div class="chip">
       <svg class="ico" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24">
-       <circle cx="12" cy="12" r="9">
-       </circle>
-       <path d="M14.5 9.5L10 14l4.5-4.5Z">
-       </path>
+       <circle cx="12" cy="12" r="9"></circle>
+       <path d="M14.5 9.5L10 14l4.5-4.5Z"></path>
       </svg>
-      <span class="label">
-       Kryptis
-      </span>
-      <span class="val" id="hdgTxt">
-       0°
-      </span>
+      <span class="label">Kryptis</span>
+      <span class="val" id="hdgTxt">0°</span>
      </div>
      <div class="chip gps gps-error" id="gpsChip" title="Pakeisti NodeMCU adresa">
       <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -890,80 +897,23 @@
       <span class="label">GPS</span>
       <span class="val" id="gpsStatusText">Atsijunge</span>
      </div>
-     <!-- Distance A→B -->
      <div class="chip">
       <svg class="ico" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
-       <path d="M3 17h18"/>
-       <path d="M3 17l3-3M3 17l3 3"/>
-       <path d="M21 17l-3-3M21 17l-3 3"/>
+       <path d="M3 17h18"></path>
+       <path d="M3 17l3-3M3 17l3 3"></path>
+       <path d="M21 17l-3-3M21 17l-3 3"></path>
       </svg>
       <span class="label">Atstumas AB</span>
       <span class="val" id="distTxt">—</span>
      </div>
-     <!-- Worked area -->
      <div class="chip">
       <svg class="ico" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
-       <rect x="5" y="5" width="14" height="14" rx="2" ry="2"/>
-       <path d="M5 12h14M12 5v14"/>
-      </svg>
-      <span class="label">Išdirbtas plotas</span>
-      <span class="val" id="areaTxt">0.00 ha</span>
-     </div>
-     <!-- Productivity (area rate) -->
-     <div class="chip">
-      <svg class="ico" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
-       <circle cx="12" cy="12" r="9"/>
-       <path d="M12 12l5-2"/>
-       <path d="M12 7v5"/>
-      </svg>
-      <span class="label">Našumas</span>
-      <span class="val" id="rateTxt">0 Ha/Val.</span>
-     </div>
-     <!-- Implement width -->
-     <div class="chip">
-      <svg class="ico" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
-       <path d="M4 12H20"/>
-       <path d="M4 12l3-3M4 12l3 3"/>
-       <path d="M20 12l-3-3M20 12l-3 3"/>
+       <path d="M4 12H20"></path>
+       <path d="M4 12l3-3M4 12l3 3"></path>
+       <path d="M20 12l-3-3M20 12l-3 3"></path>
       </svg>
       <span class="label">Padargo plotis</span>
       <span class="val" id="widthTxt">0.00 m</span>
-     </div>
-     <div class="chip">
-      <svg class="ico" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" viewbox="0 0 24 24">
-       <line x1="4" x2="12" y1="18" y2="10">
-       </line>
-       <line x1="8" x2="16" y1="18" y2="10">
-       </line>
-       <line x1="12" x2="20" y1="18" y2="10">
-       </line>
-      </svg>
-      <span class="label">
-       Pravažiavimas
-      </span>
-      <span class="val" id="passTxt">
-       0
-      </span>
-     </div>
-     <div class="chip">
-      <svg class="ico" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24">
-       <circle cx="7" cy="12" r="2">
-       </circle>
-       <circle cx="17" cy="12" r="2">
-       </circle>
-       <line x1="9" x2="15" y1="12" y2="12">
-       </line>
-       <polyline points="14,10 15,12 14,14">
-       </polyline>
-       <polyline points="10,10 9,12 10,14">
-       </polyline>
-      </svg>
-      <span class="label">
-       AB
-      </span>
-      <span class="val" id="abTxt">
-       Nėra
-      </span>
      </div>
     </div>
    </div>
@@ -1113,6 +1063,47 @@
   </div>
   <canvas id="map">
    </canvas>
+  <div class="hud hud-bottom">
+   <div class="chips">
+    <div class="chip">
+     <svg class="ico" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+      <rect x="5" y="5" width="14" height="14" rx="2" ry="2"/>
+      <path d="M5 12h14M12 5v14"/>
+     </svg>
+     <span class="label">Išdirbtas plotas</span>
+     <span class="val" id="areaTxtBottom">0.00 ha</span>
+    </div>
+    <div class="chip">
+     <svg class="ico" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9"/>
+     <path d="M12 12l5-2"/>
+      <path d="M12 7v5"/>
+     </svg>
+     <span class="label">Našumas</span>
+     <span class="val" id="rateTxtBottom">0 Ha/Val.</span>
+    </div>
+    <div class="chip">
+     <svg class="ico" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" viewBox="0 0 24 24">
+      <line x1="4" x2="12" y1="18" y2="10"></line>
+      <line x1="8" x2="16" y1="18" y2="10"></line>
+      <line x1="12" x2="20" y1="18" y2="10"></line>
+     </svg>
+     <span class="label">Pravažiavimas</span>
+     <span class="val" id="passTxt">0</span>
+    </div>
+    <div class="chip">
+     <svg class="ico" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="7" cy="12" r="2"></circle>
+      <circle cx="17" cy="12" r="2"></circle>
+      <line x1="9" x2="15" y1="12" y2="12"></line>
+      <polyline points="14,10 15,12 14,14"></polyline>
+      <polyline points="10,10 9,12 10,14"></polyline>
+     </svg>
+     <span class="label">AB</span>
+     <span class="val" id="abTxt">Nėra</span>
+    </div>
+   </div>
+  </div>
    <div class="hint">
     <b>
      Valdymas
@@ -1497,6 +1488,14 @@
                 // Figure-space padding for stable-width numbers without fixed containers
                 var FIG = '\u2007';
                 function padFig(str, width){ str = String(str); while (str.length < width) str = FIG + str; return str; }
+                function updateStatText(ids, text) {
+                    for (var i = 0; i < ids.length; i++) {
+                        var el = document.getElementById(ids[i]);
+                        if (el) el.textContent = text;
+                    }
+                }
+                var areaStatIds = ['areaTxtBottom'];
+                var rateStatIds = ['rateTxtBottom'];
                 if ($('btnImpl')) $('btnImpl').onclick = toggleImplement;
                 if ($('btnSetAB')) $('btnSetAB').onclick = setABHere;
                 // removed btnClearTrail UI/button; clearing action disabled
@@ -1517,8 +1516,8 @@
 
                     // Update UI readouts immediately
                     var e;
-                    if ((e = document.getElementById('areaTxt'))) e.textContent = padFig('0.00', 5) + ' ha';
-                    if ((e = document.getElementById('rateTxt'))) e.textContent = padFig('0', 3) + ' Ha/Val.';
+                    updateStatText(areaStatIds, padFig('0.00', 5) + ' ha');
+                    updateStatText(rateStatIds, padFig('0', 3) + ' Ha/Val.');
                     if ((e = document.getElementById('distTxt'))) e.textContent = padFig('-', 3) + ' m';
                     if ((e = document.getElementById('passTxt'))) e.textContent = padFig('0', 3);
                     refreshABStatus();
@@ -1967,12 +1966,10 @@
             }
         }
         // Worked area (ha)
-        if ((e = document.getElementById('areaTxt'))) e.textContent = padFig((totalAreaM2 / 10000).toFixed(2), 5) + ' ha';
+        updateStatText(areaStatIds, padFig((totalAreaM2 / 10000).toFixed(2), 5) + ' ha');
         // Productivity (ha/h)
-        if ((e = document.getElementById('rateTxt'))) {
-            var rate = passWidth * v * 0.36; // area rate
-            e.textContent = padFig(Math.round(rate), 3) + ' Ha/Val.';
-        }
+        var rate = passWidth * v * 0.36; // area rate
+        updateStatText(rateStatIds, padFig(Math.round(rate), 3) + ' Ha/Val.');
         // Implement width (m)
         if ((e = document.getElementById('widthTxt'))) {
             var wtxt = passWidth.toFixed(2).replace(/\.00$/, '');
@@ -2271,9 +2268,6 @@ body.theme-night .leaflet-popup,body.theme-day .leaflet-popup{background:inherit
   function summaryText() {
     var parts = [];
     var pose = bridge.lastPose && bridge.lastPose();
-    if (pose && typeof pose.speed === 'number') {
-      parts.push((pose.speed * 3.6).toFixed(1) + ' km/h');
-    }
     if (lastFix && typeof lastFix.sats === 'number') {
       parts.push(lastFix.sats + ' sats');
     }
@@ -2561,6 +2555,11 @@ body.theme-night .leaflet-popup,body.theme-day .leaflet-popup{background:inherit
     border-bottom: 1px solid rgba(0,0,0,0.12) !important;
     box-shadow: 0 8px 24px rgba(0,0,0,0.08) !important;
   }
+</style>
+<style id="hud-bottom-theme-overrides">
+  .hud.hud-bottom{border-bottom:0 !important;}
+  body.theme-day .hud.hud-bottom{border-bottom:0 !important;border-top:1px solid rgba(0,0,0,0.12) !important;}
+  body.theme-night .hud.hud-bottom{border-bottom:0 !important;border-top:1px solid rgba(255,255,255,0.14) !important;}
 </style>
 <style id="group-toggle-outline-visibility">
   /* Day: rounded outline + black icons for collapsible buttons */
